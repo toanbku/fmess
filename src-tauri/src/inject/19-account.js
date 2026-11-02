@@ -34,7 +34,10 @@
     // A theme can show your picture and name (var(--fmess-avatar), attr(data-fmess-name)).
     const root = document.documentElement;
     if (contactPicture) root.style.setProperty('--fmess-avatar', `url("${contactPicture}")`);
-    root.setAttribute('data-fmess-name', window.require('CurrentUserInitialData').NAME || '');
+    const name = window.require('CurrentUserInitialData').NAME || '';
+    root.setAttribute('data-fmess-name', name);
+    // The rail shows them too (Rust skips what it already has).
+    invoke('set_account', { picture: contactPicture, name }).catch(() => {});
   };
   const currentAccount = () => {
     try {

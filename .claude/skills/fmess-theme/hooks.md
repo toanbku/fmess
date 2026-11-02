@@ -7,6 +7,78 @@ and the shipped themes on 2026-11-02. Facebook and inject.js change: re-check wi
 cd ~/projects/herald && grep -rn "data-fmess\|--fmess\|fmess-account\|UNDER_EVERY_THEME" src-tauri/src/inject/
 ```
 
+## One theme, three web views
+
+fMess's window holds three web views. `<html>` says which one it is:
+`html[data-fmess-service="messenger" | "instagram" | "rail"]`. A theme that mentions
+`data-fmess-service` goes into all three; one that doesn't (an older user theme) goes
+into Messenger only. fMess's rail shows for a theme only when its CSS has a rail
+section (`data-fmess-service="rail"`); otherwise only when Instagram is on with its icon.
+
+- **Scope Messenger-only rules away from Instagram.** Instagram's marks reuse
+  Messenger's names where the meaning is the same (`composer`, `emoji`, `attach`,
+  `sticker`, `voice-clip`, `send`, `chat-header`, `info`, `details`…), so a bare
+  `[data-fmess-ui="composer"]` rule written for Messenger also hits Instagram. Prefix
+  such rules with `:where(html:not([data-fmess-service="instagram"]))`, which adds no
+  specificity and write Instagram's under
+  `html[data-fmess-service="instagram"]`.
+- **The built-in themes' sources** (`~/projects/fmess-themes/<app>/`, used by build.py
+  below) are not on this machine: only `fmess-themes/instagram/spec/recon.md` and a draft
+  `fmess-themes/zalo/instagram.css` are. The rail and Instagram sections were added by
+  editing the built `src-tauri/themes/{zalo,whatsapp,teams}.css` directly. Port them to
+  the sources before the next `build.py` run, or it drops them.
+
+### The rail (`ui/rail.html`)
+
+The bar down the left is its own page, 68px wide, under the title strip. It shows when
+a theme is on, or when more than one service has an icon. Its defaults sit in `:where()`,
+so any theme selector wins. Scope everything with `html[data-fmess-service="rail"]`.
+
+| Hook | What |
+|---|---|
+| `#fmess-rail` | the column of items (flex, `top: var(--fmess-title-bar)`) |
+| `[data-fmess-rail="messenger" \| "instagram" \| "settings" \| "account"]` | the items, `<button>`s; clicks work (select the service, open Settings, the account menu) |
+| `[data-fmess-rail][data-active]` | the selected service |
+| `[data-fmess-rail][hidden]` | a service that is off, or Instagram with its icon hidden in Settings |
+| `[data-fmess-rail] > svg` | the icon, `fill`/`stroke: currentColor`: set `color` |
+| `[data-fmess-badge]` | the unread count in a service item; `hidden` at 0, text `1`…`99+` |
+| `[data-fmess-avatar]` | the picture in `account`, background `var(--fmess-avatar)` (your initial when Hide profile pictures is on) |
+| `html[data-fmess-dark]`, `html[data-fmess-name]`, `--fmess-avatar`, `--fmess-title-bar` | as on Messenger's page |
+| `html[data-fmess-theme]` | a theme is on |
+
+Decorative items the target app has (Zalo's contacts, cloud…) are drawn on `#fmess-rail`
+or its pseudo-elements; react to Instagram's item with
+`#fmess-rail:has(> [data-fmess-rail="instagram"]:not([hidden]))`.
+
+Nothing can show past the rail's 68px (it is its own web view): a target's tooltips beside
+its app bar can't be drawn; the real items have native ones (`title`).
+
+### Instagram (`src-tauri/src/inject-instagram.js`)
+
+`html` gets `data-fmess-service="instagram"`, `data-fmess-dark`, `data-fmess-unread="N"`,
+`data-fmess-view="inbox" | "thread" | "requests" | "other"` and `data-fmess-compact` (the
+avatars-only list), plus `--fmess-title-bar`. Instagram paints from `--ig-*` variables
+(`r, g, b` triplets): remap those, not Messenger's (DOM facts:
+`~/projects/fmess-themes/instagram/spec/recon.md`). Bubbles and the composer are found by
+structure, role and position, not by look, so restyling them keeps their marks;
+`ig-shell` stays where it was first found. Marks are refreshed at most every 500 ms
+after the page changes.
+
+| Mark | Element |
+|---|---|
+| `ig-nav`, `[data-fmess-nav="logo\|home\|reels\|direct\|search\|notifications\|create\|profile\|settings\|meta"]` | Instagram's own 72px navigation and its links |
+| `ig-shell` | the ancestor that keeps those 72px free (its margin or padding): zero it when `ig-nav` is hidden |
+| `list`, `list-header`, `list-account`, `new-message`, `search`, `notes`, `list-title`, `requests` | the chat list and its header parts |
+| `row` + `[data-fmess-unread]`, `[data-fmess-selected]` | a chat row; unread; the open chat |
+| `row-avatar`, `row-name`, `row-preview`, `row-time` | the row's picture box and its text leaves (`·` between preview and time is unmarked) |
+| `empty` | the right pane on the inbox, no chat open |
+| `chat`, `chat-header`, `chat-avatar` | the chat column, its header, the header's picture box |
+| `audio-call`, `video-call`, `info` | the header's three buttons |
+| `messages`, `bubble` + `[data-fmess-dir="in\|out"]`, `date-break` | the message scroller (`column-reverse`), bubbles, centred date lines |
+| `composer`, `composer-input`, `composer-actions` | the pill; the field's box; the box of buttons after it |
+| `emoji`, `voice-clip`, `attach`, `sticker`, `send`, `more-actions` | composer buttons (`send`/`more-actions` while typing, unverified) |
+| `details`, `details-title` | the details pane; its title row |
+
 ## How the CSS reaches the page
 
 - fMess puts the chosen theme in `<style id="fmess-theme">`, appended last to `<html>`
@@ -153,12 +225,14 @@ html[data-fmess-chats]:not([data-fmess-media]) {
   window), `settings` opens Settings, `sidebar` folds the theme's sidebar away and back
   (below); other names only light up. A press on one never starts a window drag, even over
   the macOS drag strip.
-- `sidebar` toggles `data-fmess-sidebar-collapsed` on `<html>`, remembered in localStorage
-  (`fmess.sidebarCollapsed`) for the next start. fMess only keeps the flag; the theme does
-  the folding. Teams' sidebar button hides the **app bar**, not the chat list: folded, the
-  Teams theme drops the rail drawn in the list's padding (`padding-left: 0`, the
-  pseudo-elements `display: none`, `--fmess-buttons: none` so nothing there lights or
-  clicks, the unread badge hidden) and the list starts at the window's edge.
+- `sidebar` toggles `data-fmess-sidebar-collapsed` on `<html>`, kept in fMess's settings
+  (`sidebarCollapsed`) for the next start; choosing another theme unfolds it. With a theme
+  that draws fMess's rail (a `data-fmess-service="rail"` section) fMess folds the rail web
+  view away too and the page takes the window's full width, so the page's own window
+  buttons move by the rail's 68px (the Teams theme puts `sidebar` at 40 with the rail, 108
+  folded, both 108px from the window's edge). Without a rail section the theme does the
+  folding. Folded, the rail's service icons are gone: ⌃⌘1/⌃⌘2 still switch, and only
+  Messenger's page has the button to unfold.
 - fMess reads the list at most once a second.
 - Draw the pictures in fixed pseudo-elements with `pointer-events: none`: `body::before` and
   `body::after` (the Teams theme uses both), `html::before` is the strip/band.

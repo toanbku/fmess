@@ -131,7 +131,7 @@ pub fn reset_app_icon<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
 pub fn apply<R: Runtime>(app: &AppHandle<R>) {
     if let Some(image) = small(app) {
         #[cfg(not(target_os = "macos"))]
-        for window in tauri::Manager::webview_windows(app).values() {
+        for window in tauri::Manager::windows(app).values() {
             let _ = window.set_icon(image.clone());
         }
         if let Some(tray) = app.tray_by_id("main") {

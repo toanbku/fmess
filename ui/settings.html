@@ -245,6 +245,22 @@
   </div>
   <p class="note" data-messenger-missing data-i18n="messengerMissing" hidden>These belong to your Messenger account. Open fMess's window and sign in to change them here.</p>
 
+  <h2>Instagram</h2>
+  <div class="group">
+    <label class="row">
+      <span class="label">Instagram
+        <span class="hint" data-i18n="instagramHint">Your Instagram chats beside Messenger's, with their notifications and unread count. Uses more memory while on.</span>
+      </span>
+      <span class="switch"><input type="checkbox" data-key="instagram"><span></span></span>
+    </label>
+    <label class="row" data-needs="instagram">
+      <span class="label"><span data-i18n="instagramIcon">Show Instagram on the rail</span>
+        <span class="hint" data-i18n="instagramIconHint">When hidden, switch with <kbd data-service-shortcuts></kbd>.</span>
+      </span>
+      <span class="switch"><input type="checkbox" data-key="instagramIcon"><span></span></span>
+    </label>
+  </div>
+
   <h2 data-i18n="notifications">Notifications</h2>
   <div class="group">
     <label class="row">
@@ -402,6 +418,9 @@
     morePrefs: 'Tuỳ chọn khác của Messenger',
     morePrefsHint: 'Thanh toán, gửi tin nhắn và chặn.',
     open: 'Mở…',
+    instagramHint: 'Các đoạn chat Instagram của bạn nằm cạnh Messenger, kèm thông báo và số tin chưa đọc. Tốn thêm bộ nhớ khi bật.',
+    instagramIcon: 'Hiện Instagram trên thanh bên',
+    instagramIconHint: 'Khi ẩn, chuyển bằng <kbd data-service-shortcuts></kbd>.',
     messengerMissing: 'Các mục này thuộc tài khoản Messenger của bạn. Mở cửa sổ fMess và đăng nhập để chỉnh ở đây.',
     notifications: 'Thông báo',
     showNotifications: 'Hiện thông báo',
@@ -486,6 +505,9 @@
       el.textContent = mac ? say('menu bar', 'thanh menu') : say('tray', 'khay hệ thống');
     }
     document.querySelector('[data-zoom-shortcuts]').textContent = mac ? '⌘+  ⌘−  ⌘0' : 'Ctrl+  Ctrl−  Ctrl+0';
+    document.querySelector('[data-service-shortcuts]').textContent = mac
+      ? say('⌃⌘1 and ⌃⌘2', '⌃⌘1 và ⌃⌘2')
+      : say('Ctrl+Alt+1 and Ctrl+Alt+2', 'Ctrl+Alt+1 và Ctrl+Alt+2');
     renderMessenger(view.messenger);
   }
 

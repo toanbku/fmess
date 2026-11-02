@@ -10,12 +10,14 @@ mod menu;
 mod notify;
 #[cfg(debug_assertions)]
 mod probe;
+mod services;
 mod settings;
 mod themes;
 mod update;
 mod webview;
 #[cfg(windows)]
 mod webview2;
+mod window_state;
 
 use tauri::{AppHandle, Manager, Runtime, WindowEvent};
 use tauri_plugin_window_state::StateFlags;
@@ -58,6 +60,7 @@ fn main() {
             settings::update_settings,
             settings::sync_messenger_prefs,
             settings::set_pane_widths,
+            settings::set_sidebar_collapsed,
             settings::set_messenger_pref,
             settings::open_messenger_preferences,
             webview::open_settings,
@@ -69,10 +72,13 @@ fn main() {
             webview::set_viewer_open,
             menu::show_account_menu,
             menu::menu_shortcut,
+            services::select_service,
+            services::set_account,
         ])
         .on_menu_event(menu::handle)
         .setup(|app| {
             let handle = app.handle();
+            app.manage(window_state::Closed::default());
             #[cfg(windows)]
             notify::register_app_id(handle);
             let settings = settings::init(handle);
@@ -87,31 +93,36 @@ fn main() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() != MAIN_WINDOW {
-                    return;
+            if window.label() != MAIN_WINDOW {
+                return;
+            }
+            match event {
+                WindowEvent::CloseRequested { api, .. } => {
+                    window_state::save_on_close(window);
+                    if settings::current(window.app_handle()).close_to_tray {
+                        // Keep running in the tray and Dock so messages keep arriving.
+                        api.prevent_close();
+                        let _ = window.hide();
+                    } else {
+                        window.app_handle().exit(0);
+                    }
                 }
-                if settings::current(window.app_handle()).close_to_tray {
-                    // Keep running in the tray and Dock so messages keep arriving.
-                    api.prevent_close();
-                    let _ = window.hide();
-                } else {
-                    window.app_handle().exit(0);
-                }
+                WindowEvent::Resized(_) | WindowEvent::ScaleFactorChanged { .. } => services::relayout(window),
+                _ => {}
             }
         })
         .build(tauri::generate_context!())
         .expect("failed to build fMess")
-        .run(|_app, _event| {
+        .run(|app, event| match event {
+            tauri::RunEvent::Exit => window_state::save_on_exit(app),
             #[cfg(target_os = "macos")]
-            if let tauri::RunEvent::Reopen { .. } = _event {
-                show_main_window(_app);
-            }
+            tauri::RunEvent::Reopen { .. } => show_main_window(app),
+            _ => {}
         });
 }
 
 pub fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
+    if let Some(window) = services::main_window(app) {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();

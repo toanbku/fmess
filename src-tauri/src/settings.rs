@@ -5,15 +5,16 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager, Runtime, Theme};
+use tauri::{AppHandle, Manager, Runtime, Theme, Webview};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::{
     badge,
     i18n::{self, pick, Lang},
-    icon, menu, notify, themes,
+    icon, menu, notify,
+    services::{self, Service},
+    themes,
     webview::{self, SETTINGS_WINDOW},
-    MAIN_WINDOW,
 };
 
 /// fMess's own preferences. Account settings (active status, sounds, dark
@@ -52,8 +53,25 @@ pub struct Settings {
     pub custom_icon: bool,
     /// Widths the panes were dragged to; none keeps Facebook's.
     pub pane_widths: PaneWidths,
+    /// Instagram's chats run beside Messenger's. Off by default: its web
+    /// view takes a few hundred MB.
+    pub instagram: bool,
+    /// The rail shows Instagram's icon; ⌃⌘2 switches to it either way.
+    pub instagram_icon: bool,
+    /// The service shown last, shown again at start. Set by the rail.
+    #[serde(deserialize_with = "lenient_service")]
+    pub last_service: Service,
+    /// The theme's sidebar button folded its sidebar away (the Teams look's
+    /// app bar, which is fMess's rail). Set by the page; a new theme unfolds it.
+    pub sidebar_collapsed: bool,
     /// fMess's own language, "en" or "vi"; none follows the system (i18n.rs).
     pub language: Option<String>,
+}
+
+/// A service this version doesn't know (from a newer or older fMess) falls
+/// back to Messenger instead of failing the whole file, which resets every setting.
+fn lenient_service<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Service, D::Error> {
+    Ok(Service::deserialize(serde_json::Value::deserialize(deserializer)?).unwrap_or_default())
 }
 
 /// In CSS pixels. Set by the page (set_pane_widths), not the Settings window.
@@ -85,6 +103,10 @@ impl Default for Settings {
             app_name: None,
             custom_icon: false,
             pane_widths: PaneWidths::default(),
+            instagram: false,
+            instagram_icon: true,
+            last_service: Service::Messenger,
+            sidebar_collapsed: false,
             language: None,
         }
     }
@@ -129,13 +151,48 @@ pub struct SettingsView {
 }
 
 pub fn init<R: Runtime>(app: &AppHandle<R>) -> Settings {
-    let settings = settings_path(app)
+    let settings: Settings = settings_path(app)
         .and_then(|path| fs::read(path).ok())
         .and_then(|bytes| serde_json::from_slice(&bytes).ok())
         .unwrap_or_default();
+    #[cfg(debug_assertions)]
+    let settings = debug_override(settings);
     app.manage(SettingsState(Mutex::new(Settings::clone(&settings))));
     app.manage(MessengerPrefsState::default());
     settings
+}
+
+/// Debug builds only: FMESS_SETTINGS=<json> sets some settings for this run,
+/// such as `{"instagram": true, "lastService": "instagram"}`, and keeps every
+/// change in memory, so the settings file stays as it was.
+#[cfg(debug_assertions)]
+fn debug_override(settings: Settings) -> Settings {
+    let Ok(json) = std::env::var("FMESS_SETTINGS") else {
+        return settings;
+    };
+    let overridden = serde_json::from_str::<serde_json::Value>(&json)
+        .and_then(|value| merge(&settings, value))
+        .map_err(|err| eprintln!("[fmess] FMESS_SETTINGS: {err}"));
+    match overridden {
+        Ok(overridden) => {
+            IN_MEMORY.store(true, std::sync::atomic::Ordering::Relaxed);
+            overridden
+        }
+        Err(()) => settings,
+    }
+}
+
+#[cfg(debug_assertions)]
+static IN_MEMORY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// `settings` with the fields `changes` gives.
+#[cfg(debug_assertions)]
+fn merge(settings: &Settings, changes: serde_json::Value) -> serde_json::Result<Settings> {
+    let mut value = serde_json::to_value(settings)?;
+    if let (Some(fields), serde_json::Value::Object(changes)) = (value.as_object_mut(), changes) {
+        fields.extend(changes);
+    }
+    serde_json::from_value(value)
 }
 
 pub fn current<R: Runtime>(app: &AppHandle<R>) -> Settings {
@@ -164,14 +221,17 @@ pub fn update_settings<R: Runtime>(
     }
 
     let settings = change(&app, |current| {
-        // Kept by the page and the icon commands, not edited in the Settings window.
+        // Kept by the page, the rail and the icon commands, not edited in the Settings window.
         let kept = (
             current.messenger_dark_mode.take(),
             std::mem::take(&mut current.pane_widths),
+            current.last_service,
             current.custom_icon,
         );
+        let sidebar_collapsed = current.sidebar_collapsed && current.theme == settings.theme;
         *current = settings;
-        (current.messenger_dark_mode, current.pane_widths, current.custom_icon) = kept;
+        (current.messenger_dark_mode, current.pane_widths, current.last_service, current.custom_icon) = kept;
+        current.sidebar_collapsed = sidebar_collapsed;
     })?;
 
     if settings.theme != previous.theme || settings.theme_icon != previous.theme_icon {
@@ -191,12 +251,24 @@ pub fn update_settings<R: Runtime>(
             let _ = window.set_title(webview::settings_title(lang));
         }
     }
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
-        if settings.zoom != previous.zoom {
-            let _ = window.set_zoom(settings.zoom);
-        }
-        if settings.badge != previous.badge {
+    if settings.instagram != previous.instagram {
+        services::set_instagram(&app, settings.instagram);
+    }
+    if settings.theme != previous.theme
+        || settings.instagram_icon != previous.instagram_icon
+        || settings.hide_avatars != previous.hide_avatars
+        || language_changed
+    {
+        services::update_rail(&app);
+    }
+    if settings.badge != previous.badge {
+        if let Some(window) = services::main_window(&app) {
             badge::refresh(&window);
+        }
+    }
+    for webview in services::webviews(&app) {
+        if settings.zoom != previous.zoom {
+            let _ = webview.set_zoom(settings.zoom);
         }
         if settings.block_typing != previous.block_typing
             || settings.hide_avatars != previous.hide_avatars
@@ -204,13 +276,15 @@ pub fn update_settings<R: Runtime>(
             || settings.theme != previous.theme
             || language_changed
         {
-            let _ = window.eval(page_settings_script(&app, &settings));
+            let _ = webview.eval(page_settings_script(&webview, &settings));
         }
+    }
+    if let Some(webview) = services::webview(&app, Service::Messenger) {
         if settings.mac_calls != previous.mac_calls {
             // The call gate is patched as Facebook loads, so reload to apply
             // it; the page's settings from when the window opened are older,
             // so this one value goes to the reload through localStorage.
-            let _ = window.eval(format!(
+            let _ = webview.eval(format!(
                 "try {{ localStorage.setItem('fmess.macCalls', '{}'); }} catch {{}} location.reload();",
                 if settings.mac_calls { "1" } else { "0" }
             ));
@@ -231,7 +305,23 @@ pub fn sync_messenger_prefs<R: Runtime>(app: AppHandle<R>, prefs: MessengerPrefs
     if current(&app).messenger_dark_mode.as_deref() == Some(prefs.dark_mode.as_str()) {
         return Ok(());
     }
-    change(&app, |settings| settings.messenger_dark_mode = Some(prefs.dark_mode)).map(drop)
+    change(&app, |settings| settings.messenger_dark_mode = Some(prefs.dark_mode))?;
+    services::update_rail(&app);
+    Ok(())
+}
+
+/// Called by the page when the theme's sidebar button folds its sidebar away
+/// or back; with a theme that draws the rail, that folds the rail.
+#[tauri::command]
+pub fn set_sidebar_collapsed<R: Runtime>(app: AppHandle<R>, collapsed: bool) -> Result<(), String> {
+    if current(&app).sidebar_collapsed == collapsed {
+        return Ok(());
+    }
+    change(&app, |settings| settings.sidebar_collapsed = collapsed)?;
+    if let Some(window) = services::main_window(&app) {
+        services::layout(&window);
+    }
+    Ok(())
 }
 
 /// Called by inject.js when a pane has been dragged to a new width.
@@ -256,15 +346,14 @@ pub fn messenger_theme(dark_mode: Option<&str>) -> Option<Theme> {
 /// darkMode or muteFor (milliseconds, -1 until turned off, 0 to turn it off).
 #[tauri::command]
 pub fn set_messenger_pref<R: Runtime>(app: AppHandle<R>, name: String, value: serde_json::Value) -> Result<(), String> {
-    let window = app
-        .get_webview_window(MAIN_WINDOW)
+    let webview = services::webview(&app, Service::Messenger)
         .ok_or_else(|| pick(i18n::current(&app), "fMess's window is closed", "Cửa sổ fMess đang đóng"))?;
     if let ("darkMode", Some(mode)) = (name.as_str(), value.as_str()) {
         // Recolour fMess's windows together with the page, not after it reports.
         app.set_theme(messenger_theme(Some(mode)));
     }
     let call = serde_json::to_string(&(name, value)).expect("JSON serializes");
-    window
+    webview
         .eval(format!("window.__fmessSetMessengerPref?.(...{call});"))
         .map_err(|err| err.to_string())
 }
@@ -274,9 +363,9 @@ pub fn set_messenger_pref<R: Runtime>(app: AppHandle<R>, name: String, value: se
 #[tauri::command]
 pub fn open_messenger_preferences<R: Runtime>(app: AppHandle<R>, section: Option<String>) {
     crate::show_main_window(&app);
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
+    if let Some(webview) = services::webview(&app, Service::Messenger) {
         let section = serde_json::to_string(&section).expect("JSON serializes");
-        let _ = window.eval(format!("window.__fmessOpenMessengerPreferences?.({section});"));
+        let _ = webview.eval(format!("window.__fmessOpenMessengerPreferences?.({section});"));
     }
 }
 
@@ -299,41 +388,52 @@ pub fn zoom_by<R: Runtime>(app: &AppHandle<R>, step: i32) {
     if let Err(err) = change(app, |settings| settings.zoom = zoom) {
         eprintln!("could not save the text size: {err}");
     }
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
-        let _ = window.set_zoom(zoom);
+    for webview in services::webviews(app) {
+        let _ = webview.set_zoom(zoom);
     }
 }
 
 /// The settings inject.js works with. Facebook clears localStorage keys it
 /// doesn't know within seconds, so they reach the page from here: in the
 /// window's initialization script, and again after every page load.
-pub fn page_settings<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> String {
+pub fn page_settings<R: Runtime>(app: &AppHandle<R>, settings: &Settings, service: Service) -> String {
+    let theme = match service {
+        Service::Messenger => themes::for_page(app, settings.theme.as_deref()),
+        Service::Instagram => themes::for_scoped_page(app, settings.theme.as_deref()),
+    };
     serde_json::json!({
         "macCalls": settings.mac_calls,
         "blockTyping": settings.block_typing,
         "hideAvatars": settings.hide_avatars,
         "spellCheck": settings.spell_check,
-        "theme": themes::for_page(app, settings.theme.as_deref()),
+        "theme": theme,
         "paneWidths": settings.pane_widths,
+        "sidebarCollapsed": settings.sidebar_collapsed,
         // For the notifications the page writes itself.
         "lang": Lang::from_setting(settings.language.as_deref()),
     })
     .to_string()
 }
 
-/// Hands the current settings to the loaded page.
-pub fn page_settings_script<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> String {
-    format!("window.__fmessApplySettings?.({});", page_settings(app, settings))
+/// Hands the current settings to the loaded page of `webview`.
+pub fn page_settings_script<R: Runtime>(webview: &Webview<R>, settings: &Settings) -> String {
+    let service = Service::from_label(webview.label()).unwrap_or_default();
+    format!("window.__fmessApplySettings?.({});", page_settings(webview.app_handle(), settings, service))
 }
 
 /// Goes back to Messenger's own look (the theme was removed).
 pub fn clear_theme<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     change(app, |settings| settings.theme = None)?;
     icon::apply(app);
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
-        let _ = window.eval(page_settings_script(app, &current(app)));
+    services::update_rail(app);
+    for webview in services::webviews(app) {
+        let _ = webview.eval(page_settings_script(&webview, &current(app)));
     }
     Ok(())
+}
+
+pub fn set_last_service<R: Runtime>(app: &AppHandle<R>, service: Service) -> Result<(), String> {
+    change(app, |settings| settings.last_service = service).map(drop)
 }
 
 /// Called by the icon commands (icon.rs), which keep the picture itself.
@@ -344,6 +444,9 @@ pub fn set_custom_icon<R: Runtime>(app: &AppHandle<R>, on: bool) -> Result<(), S
 /// Renames fMess's open windows and tray icon; the Dock, the menu bar and the
 /// Start menu keep the name it was installed with.
 fn apply_app_name<R: Runtime>(app: &AppHandle<R>, name: &str) {
+    if let Some(window) = services::main_window(app) {
+        let _ = window.set_title(name);
+    }
     for (label, window) in app.webview_windows() {
         if label != SETTINGS_WINDOW {
             let _ = window.set_title(name);
@@ -379,6 +482,10 @@ fn view<R: Runtime>(app: &AppHandle<R>, settings: Settings) -> SettingsView {
 /// Errors are in the language of the settings being saved: `change` holds
 /// the settings' lock, so `i18n::current` can't be asked here.
 fn save<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> Result<(), String> {
+    #[cfg(debug_assertions)]
+    if IN_MEMORY.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(());
+    }
     let lang = Lang::from_setting(settings.language.as_deref());
     let path = settings_path(app).ok_or(pick(lang, "no config directory", "Không tìm thấy thư mục cài đặt"))?;
     let json = serde_json::to_vec_pretty(settings).expect("settings serialize to JSON");
@@ -406,6 +513,39 @@ fn settings_path<R: Runtime>(app: &AppHandle<R>) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn instagram_is_opt_in() {
+        let settings: Settings = serde_json::from_str("{}").unwrap();
+        assert!(!settings.instagram);
+        assert!(settings.instagram_icon);
+    }
+
+    #[test]
+    fn an_unknown_service_keeps_the_other_settings() {
+        let settings: Settings = serde_json::from_str(r#"{"zoom": 1.25, "instagram": true, "lastService": "whatsapp"}"#).unwrap();
+        assert_eq!(settings.last_service, Service::Messenger);
+        assert_eq!(settings.zoom, 1.25);
+        assert!(settings.instagram);
+        let settings: Settings = serde_json::from_str(r#"{"lastService": 2}"#).unwrap();
+        assert_eq!(settings.last_service, Service::Messenger);
+        let settings: Settings = serde_json::from_str(r#"{"lastService": "instagram"}"#).unwrap();
+        assert_eq!(settings.last_service, Service::Instagram);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    fn overrides_only_the_given_settings() {
+        let settings = Settings {
+            zoom: 1.25,
+            ..Settings::default()
+        };
+        let merged = merge(&settings, serde_json::json!({ "instagram": true, "lastService": "instagram" })).unwrap();
+        assert!(merged.instagram);
+        assert_eq!(merged.last_service, Service::Instagram);
+        assert_eq!(merged.zoom, 1.25);
+        assert!(merge(&settings, serde_json::json!({ "instagram": "yes" })).is_err());
+    }
 
     #[test]
     fn writes_settings_whole() {

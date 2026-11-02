@@ -48,3 +48,7 @@
     wait.observe(document, { childList: true });
   };
 
+  // One theme serves Messenger and the rail (rail.html): each picks its own
+  // part by this attribute.
+  if (!window.opener) withRoot((root) => root.setAttribute('data-fmess-service', 'messenger'));
+
