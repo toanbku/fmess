@@ -85,8 +85,20 @@ showed in every WebKit snapshot and passed `elementFromPoint`, yet on the user's
 WebKit clipped it away (a transformed ancestor). For anything moved across containing
 blocks, ask the user to look, or avoid the move (hooks.md, `--fmess-search-box`).
 
-**No focus in probes.** probe.rs calls `set_focus`, but macOS won't make a background-launched
-app key: `:focus-within`, focus rings and focus events can't be checked by probes.
+**No focus in probes,** unless you bring the window up. probe.rs calls `set_focus`, but macOS
+won't make a background-launched app key: `:focus-within`, focus rings and focus events
+aren't seen. `osascript -e 'tell application id "io.github.toanbku.fmess" to activate'`
+a few seconds after the launch makes it key (it comes to the front of the user's screen);
+the probe waits for `document.hasFocus()`.
+
+**No real input.** Synthetic events don't scroll, hover (`:hover`) or count as trusted, and
+posting CGEvents needs Accessibility, which the shell doesn't have. Wheel and hover bugs
+need the user's hands: say exactly what to do, or leave a logging probe running (a long
+`FMESS_PROBE_WAIT`, MutationObservers and capture listeners writing a log it returns) and ask
+them to reproduce.
+
+**`pkill -f "fMess.app/Contents/MacOS/fmess"`** also kills the shell that runs it if that
+shell's command line holds the same text (a `pgrep` of it in the same command): exit 144.
 
 **Size limit:** a probe of about 800 KB (two copies of a 390 KB theme) never runs: no
 result, not even from a `setTimeout` watchdog. Keep one copy of the theme per probe; to
@@ -190,6 +202,21 @@ in settings.json for the test (fMess then sends "not typing"), use a read chat, 
 Enter, insert with `document.execCommand('insertText', false, ch)`, and empty the box after
 with `execCommand('selectAll')` + `execCommand('delete')` (works in WebKit; in Chrome it may
 not: use real keys there). Return `boxEmptyAfter` and check it.
+
+## Text in the box, without sending
+
+To see the composer with words in it (wrapping, Messenger folding its buttons into "+"),
+a probe can type and take it back in the same run, with no Enter:
+
+```js
+const box = document.querySelector('[data-fmess-ui="composer"] [role="textbox"]');
+box.focus();
+document.execCommand('insertText', false, 'a line long enough to wrap …');
+// measure …
+document.execCommand('selectAll'); document.execCommand('delete');
+```
+
+It is a draft only; check that the box is empty afterwards. Open only a read chat first.
 
 ## Hover, tooltips, the reply bar
 

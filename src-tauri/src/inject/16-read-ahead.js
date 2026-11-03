@@ -128,7 +128,7 @@
       warmRecentChats();
     }, delay);
   };
-  if (warmChats && !window.opener) {
+  if (warmChats && !window.opener && !IN_POPUP) {
     const start = setInterval(async () => {
       if (!chatLinks().length) return;
       clearInterval(start);

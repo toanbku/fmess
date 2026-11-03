@@ -17,7 +17,9 @@ page, and the user picks it in Settings. Messenger stays underneath. The goal: s
 uses `<app>` every day sees `<app>` at a glance, in light and dark, at 880×600.
 
 Zalo, WhatsApp and Teams are shipped (Teams since 0.1.25; its workspace and NOTES.md are in
-`~/projects/fmess-themes/teams/`). The user has explained the same things for each one;
+`~/projects/fmess-themes/teams/`). Google Chat (`gchat`) followed (workspace
+`~/projects/fmess-themes/gchat/`, `spec/` complete): it is the first that needed fMess to build
+UI Messenger lacks (the nav, chat pop-ups, see hooks.md) rather than only restyle. The user has explained the same things for each one;
 this skill holds them, so run it end to end without asking again.
 
 **Read before writing selectors:**
@@ -31,6 +33,9 @@ this skill holds them, so run it end to end without asking again.
   user's app.
 
 ## Where things are
+
+Paths are this skill's author's. On another Mac the repo may sit elsewhere (it was
+`/Users/<you>/fmess` once) and the workspace may not exist: map them before running a step.
 
 | What | Path |
 |---|---|
@@ -120,7 +125,11 @@ can't**. Start from this (details in hooks.md):
 | Bubbles | `--chat-*` vars, `[data-message-id] [role="presentation"]`, `[dir="auto"]` | no group-position mark: no tails, no first/last radii |
 | Date dividers | `[data-scope="date_break"] > span > span` | |
 | Reactions | `--reaction-pill-*`, `reactions`, `more-emojis`, `img[alt="…"] { content: url() }` | the img swap is global |
-| Composer, send files, emoji, like/send | `composer`, `attach`, `more-actions`, `emoji`, `sticker`, `gif`, `voice-clip`, `like`, `send`; flex `order`, `display: contents` | rich-text toolbars, formatting: can't. The default 👍 is marked `send` (hooks.md): guard it |
+| Composer, send files, emoji, like/send | `composer`, `attach`, `more-actions`, `emoji`, `sticker`, `gif`, `voice-clip`, `like`, `send`; flex `order`, `display: contents` | rich-text toolbars, formatting: can't. The default 👍 is marked `send` (hooks.md): guard it. Test with a long line too (hooks.md, "The composer row") |
+| Recording a voice clip | `voice-bar`, `voice-play`, `voice-cancel`, `send` | click `voice-clip` in a probe at a width that shows it, then Cancel or kill the app |
+| Nav with sections (Chat's Direct messages / Spaces) | `--fmess-nav: 1` → `#fmess-nav`; `data-fmess-chat` kinds | hooks.md "A nav of the theme's own" |
+| Chats opened from the nav fill the page | `html[data-fmess-full-chat]`, `#fmess-back` | the list hidden in place must not stay scrollable (hooks.md gotchas) |
+| Chat pop-ups | `--fmess-popups: 1` → `.fmess-popup-open`, `.fmess-popup-current`, `#fmess-popups` | each is a whole Messenger in a frame (hooks.md) |
 | Reply / link preview bar | `composer-bar`, `--chat-replied-message-background-color` | UNDER_EVERY_THEME makes it grow |
 | Typing indicator | no mark; a structure (hooks.md) | only someone else typing shows it: catch it with `tools/typing-dots.js`. Messenger draws its picture 8px left of the messages' pictures; Teams aligns it |
 | Read receipt, reaction pills, group sender names | structural selectors (hooks.md, "No mark, but a structure") | the img swap / `@container style()` flag |

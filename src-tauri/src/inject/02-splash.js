@@ -1,7 +1,7 @@
   // fMess's loading screen in place of Facebook's, in Messenger's colours
   // (set by fMess before this script), until the chat list is up. Login and
   // other pages show at once.
-  if (!window.opener && window.__fmessSplashLogo && /^\/messages(\/|$)/.test(location.pathname)) {
+  if (!window.opener && !IN_POPUP && window.__fmessSplashLogo && /^\/messages(\/|$)/.test(location.pathname)) {
     const dark = window.__fmessDark ?? matchMedia('(prefers-color-scheme: dark)').matches;
     const splashStyle = document.createElement('style');
     splashStyle.textContent = `
@@ -55,7 +55,8 @@
         document.querySelector('input[name="email"], input[name="pass"]') ||
         !/^\/messages(\/|$)/.test(location.pathname) ||
         Date.now() - shownAt > 20000;
-      if (!ready) return;
+      // A theme that lists every group waits for them (see syncNav).
+      if (!ready || (Date.now() - shownAt < 20000 && spacesHolding())) return;
       clearInterval(waitForChats);
       splash.classList.add('done');
       setTimeout(() => (splash.remove(), splashStyle.remove()), 400);

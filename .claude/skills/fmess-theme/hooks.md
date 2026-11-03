@@ -63,8 +63,9 @@ input, so a fresh DOM may go up to a second without its marks.
 | `composer` | the message box row: `[role=region]` holding the contenteditable `[role=textbox]` in `[role=main]` | structure |
 | `composer-bar` | the composer's previous sibling: the reply bar / link preview bar | structure |
 | `voice-clip`, `attach`, `sticker`, `gif`, `emoji` | composer buttons | start of their `svg path d` (`COMPOSER_ICONS`). Breaks if Facebook redraws an icon. |
-| `like` / `send` | the button in the composer's last `<span>`: `like` while it holds an `<img>` (the chat's quick reaction), `send` otherwise | structure, re-marked on input. **Trap (0.1.21):** Messenger's default thumbs-up is an `<svg>` ("Send a like"), so it is marked `send` on an empty box. A theme that shows `send` as a send button then sends a 👍. Guard: `> span:has(> [role="button"] path[d^="M16,9.1c"])` (its icon) besides the mark and the English label. |
+| `like` / `send` | the button in the composer's last `<span>` child (while recording it isn't the last child: Cancel follows): `like` while it holds an `<img>` (the chat's quick reaction), `send` otherwise | structure, re-marked on input. **Trap (0.1.21):** Messenger's default thumbs-up is an `<svg>` ("Send a like"), so it is marked `send` on an empty box. A theme that shows `send` as a send button then sends a 👍. Guard: `> span:has(> [role="button"] path[d^="M16,9.1c"])` (its icon) besides the mark and the English label. |
 | `more-actions` | any other composer button outside the text field. While typing, Messenger folds attach/sticker/gif into one "+", which gets this mark. | structure |
+| `voice-bar`, `voice-play`, `voice-cancel` | while recording a voice clip (after `voice-clip` is clicked): the composer child holding `[role="timer"]` that replaces the field (Messenger paints it `--chat-composer-button-color`, its progress is a `[role="slider"]` sliding in at opacity .2, the timer a white chip), the stop button in it (then play/pause; its icon fills with `--chat-composer-button-color`), and Cancel, which comes **after** the send span. Before, all three were `more-actions`, and send too, so themes drew them as their "+" | structure |
 | `chat-header` | the header row above `[role=log]` | ancestor of `info` |
 | `info` | header button with `aria-expanded` that opens the details. `[aria-expanded="true"]` while they're open. | structure |
 | `audio-call`, `video-call` | the two svg buttons just before `info` on the same line (only marked when exactly two) | position |
@@ -345,5 +346,85 @@ keep the text colour following its own background.
 - **Row hover in two tones.** Messenger's own hover layer (`--hover-overlay`) covers only
   part of a chat row. A theme that paints its own row hover sets
   `--hover-overlay: transparent !important` on `[data-fmess-list] [role="row"] a[role="link"]`.
+- **Something hidden in place still takes the wheel.** WebKit picks the scroller under the
+  pointer on its scrolling thread, ignoring `visibility: hidden` and `pointer-events: none`.
+  gchat hid the chat list in place (full-chat mode) over the chat's left half, and the wheel
+  there scrolled the hidden list. Make whatever hides there not scrollable
+  (`overflow: hidden` on its scrollers) or take it out of the way. `elementFromPoint` says
+  nothing about this: list the elements with `overflow: auto|scroll` and
+  `scrollHeight > clientHeight` under the spot instead.
 - **Hit areas.** Never hide a button's box to restyle it. Hide its `svg *` (or the svg's
   `visibility`) and paint on the button or the svg, so the click target and the tooltip stay.
+
+## The composer row (measured with gchat)
+
+- `[data-fmess-ui="composer"]` is a flex row: `h3`, a `display: contents` div holding the
+  buttons' wrappers (`div > span > div > [role=button]`), the field
+  (`> div:has([role="textbox"])`), and the like/send `<span>`. **Messenger's emoji button is
+  inside the field's box**, in a flex with the words (`div:has(> div > span >
+  [data-fmess-ui="emoji"])`, its first child the words).
+- With text, Messenger folds attach, sticker and voice into one "+" (`more-actions`); only
+  the emoji stays beside the words. It folds by text, not by width.
+- The like/send span keeps `min-height: 64px` and `align-items: flex-end`: a button of
+  another height in it sits at its foot unless the theme sets `align-items: center` (and
+  `min-height: 0` for a shorter one).
+- **A long line:** give the words' flex `flex-wrap: wrap` and the words `flex: 1 1 auto`,
+  and the icons drop under them once the line no longer fits (Chat's own composer works this
+  way); the emoji's wrapper `margin-left: auto`. Then align the row's other items to its
+  foot (`align-items: flex-end` on the composer) and put the field back on the middle
+  (`align-self: center`). Without that the words shrink to a column a few letters wide.
+- Messenger's `composer`-row width queries (`container: … / inline-size` on its parent)
+  need extra specificity (`html[data-fmess-chats] [role="main"] div > …`) when base rules
+  come later in the file.
+
+## A nav of the theme's own: `--fmess-nav: 1` (gchat)
+
+`#fmess-nav` on `<body>`: copies of the list's rows in sections, kept in step
+(17-theme-hooks.js has the full DOM: `.fmess-nav-new`, `.fmess-nav-section[data-section]`
+with `.fmess-nav-header` / `.fmess-nav-unread` (role=switch) / `.fmess-nav-rows` /
+`.fmess-nav-more`; rows carry `data-fmess-nav-chat=<id>`). Built from 09-marks'
+`data-fmess-chat="person|group|other"` on the list's items (and `data-fmess-chats-list`,
+`data-fmess-has-people`, `-groups` on the list), read from Messenger's own records.
+Every group: Messenger's list only holds recent chats, so fMess opens the Groups tab once
+behind the loading screen and keeps copies (first launch can hold the splash ~18 s).
+
+- A chat opened from the nav sets `html[data-fmess-full-chat]`; `#fmess-back` (Chat's Go
+  back) leaves it; a trusted click on a list row leaves it too.
+- fMess keeps the nav's state and the copies in its page store (`store.rs`,
+  `window.__fmessStore`, command `set_page_store`), not localStorage: **Facebook clears
+  localStorage keys it doesn't know within seconds.**
+- While Messenger's search field has the focus: `html[data-fmess-searching]`, and
+  `data-fmess-search-results` while its results listbox is up.
+- Messenger keeps a hidden measuring copy of the list's tab bar: restyle only the shown one
+  (`[role=tablist] + [role=tablist]`) or every tab folds into "More".
+
+## Chat pop-ups: `--fmess-popups: 1`
+
+As Google Chat's "Open in a pop-up" (the gchat theme). With `--fmess-popups: 1`
+on `:root`:
+
+- A chat row under the pointer, in Messenger's list or in `#fmess-nav`, gets a
+  `.fmess-popup-open` button (`[role=button]`, aria-label "Open in a pop-up"), put in the
+  row (outside its link) for the theme to place or hide. gchat shows it only on the nav's
+  rows, as Chat does.
+- A click opens `#fmess-popups` (on `<body>`): `.fmess-popup[data-chat][data-href]`, newest
+  first (use `row-reverse` to put it at the right), at most 3 (the oldest goes). Each:
+  `.fmess-popup-head` with `.fmess-popup-picture` (`--fmess-popup-picture: url(…)` from the
+  row, `none` under Hide Profile Pictures, the initial as its text), `.fmess-popup-name`,
+  `.fmess-popup-minimize`, `.fmess-popup-full`, `.fmess-popup-close`; then
+  `iframe.fmess-popup-frame[data-fmess-popup]`. `data-minimized` folds it; a click on the
+  head toggles it. Full screen opens the chat in the page (full-chat mode when the theme has
+  the nav) and closes the pop-up. Moving a frame reloads it: fMess never moves them.
+- The frame is the chat's own Messenger. The page script runs there too (the init script is
+  for all frames; `IN_POPUP` in 01-start): `html[data-fmess-popup]`, marks, the theme, Block
+  Typing, layout (title bar inset 0). Left out there: splash, notifications/badge (no Tauri
+  bridge in frames), shortcuts, read-ahead, account, and `--fmess-nav`, `--fmess-search-box`,
+  `--fmess-window-buttons`, `--fmess-buttons`. Settings reach it from the page
+  (`__fmessApplySettings` is forwarded).
+- At 420px Messenger lays out for a narrow window: the list only, the chat's panes hidden
+  beside it (absolute, `visibility: hidden`, `flex: 2 0 600px`). fMess marks those ancestors
+  of the log and the box `data-fmess-popup-pane` and shows them; the theme hides
+  `[role="navigation"]`, the window decorations (`html::before/::after`, `body::before/::after`),
+  `--header-height` (0) and Messenger's header's name block (it has a ← back to the list).
+  Messenger shows no video call button there.
+- Each pop-up is a whole Messenger (memory): keep the maximum low.

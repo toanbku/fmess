@@ -56,6 +56,13 @@
 
   // Called by fMess after every page load and when its settings change.
   window.__fmessApplySettings = (next) => {
+    // The chat pop-ups' pages too (17-theme-hooks.js).
+    popupSettings = next;
+    for (const frame of popupFrames()) {
+      try {
+        frame.contentWindow?.__fmessApplySettings?.(next);
+      } catch {}
+    }
     privacy.blockTyping = Boolean(next.blockTyping);
     language = next.lang;
     setHideAvatars(Boolean(next.hideAvatars));

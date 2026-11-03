@@ -246,7 +246,10 @@ fn configure<'a, R: Runtime, M: Manager<R>>(
     let builder = builder
         // Call popups need the script too: Facebook checks call support again
         // there. (On macOS a popup shares its opener's scripts and skips these.)
-        .initialization_script(initialization_script(app))
+        // In every frame: a theme's chat pop-ups are the chats in frames of
+        // the page (17-theme-hooks.js), and the script runs there too. It
+        // returns at once in any other frame (01-start.js).
+        .initialization_script_for_all_frames(initialization_script(app))
         .on_navigation(move |url| {
             if is_close_window_url(url) {
                 close_popup(&navigation_app, &label);
@@ -314,10 +317,12 @@ fn initialization_script<R: Runtime>(app: &AppHandle<R>) -> String {
         "window.__fmessTitleBarInset = {TITLE_BAR_INSET};\n\
          window.__fmessDebug = {debug};\n\
          window.__fmessSettings = {};\n\
+         window.__fmessStore = {};\n\
          window.__fmessDark = {dark};\n\
          window.__fmessSplashLogo = 'data:{logo_type};base64,{logo}';\n\
          {INJECTED_SCRIPT}",
-        settings::page_settings(app, &settings)
+        settings::page_settings(app, &settings),
+        crate::store::page_store(app)
     )
 }
 

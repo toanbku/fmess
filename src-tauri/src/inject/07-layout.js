@@ -21,8 +21,8 @@
     document.documentElement?.toggleAttribute(LOGGED_OUT, out);
   };
   setInterval(syncLoggedOut, 1000);
-  // Popups (call windows) keep a normal title bar.
-  const titleBarInset = window.opener ? 0 : window.__fmessTitleBarInset || 0;
+  // Popups (call windows) keep a normal title bar; a chat pop-up has none.
+  const titleBarInset = window.opener || IN_POPUP ? 0 : window.__fmessTitleBarInset || 0;
   const inset = `${titleBarInset}px`;
   const BAR_HIDDEN = `html[${CHATS}]`;
   const BAR_SHOWN = `html:not([${CHATS}])`;

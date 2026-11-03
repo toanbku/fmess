@@ -2,7 +2,20 @@
 // and hands web notifications to the OS notification center.
 // Runs at document start, before the page's scripts.
 (() => {
-  if (window.top !== window || window.__fmessInstalled) return;
+  // In a frame only as a chat pop-up of fMess's (17-theme-hooks.js): the
+  // chat in a frame of the page, a Messenger of its own. There fMess keeps
+  // the chat's look and behaviour (marks, theme, Block Typing, layout) and
+  // leaves out what the page already does for the window: the loading
+  // screen, notifications, the badge, shortcuts, reading ahead, the account
+  // and a theme's nav and buttons.
+  const IN_POPUP = window.top !== window && (() => {
+    try {
+      return window.frameElement?.hasAttribute('data-fmess-popup') === true;
+    } catch {
+      return false;
+    }
+  })();
+  if ((window.top !== window && !IN_POPUP) || window.__fmessInstalled) return;
   window.__fmessInstalled = true;
 
   // Debug builds (window.__fmessDebug, see webview.rs): note who adds wheel,
@@ -48,3 +61,6 @@
     wait.observe(document, { childList: true });
   };
 
+  // A pop-up's page says so, for themes (html[data-fmess-popup]).
+  const POPUP = 'data-fmess-popup';
+  if (IN_POPUP) withRoot((root) => root.setAttribute(POPUP, ''));

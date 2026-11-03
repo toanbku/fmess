@@ -9,8 +9,8 @@
     listChanged = true;
   });
   setInterval(() => {
-    // Wait until scrolling stops.
-    if (!onChatsPage() || performance.now() - lastScrollAt < 1000) return;
+    // Wait until scrolling stops. (The page counts; its chat pop-ups don't.)
+    if (IN_POPUP || !onChatsPage() || performance.now() - lastScrollAt < 1000) return;
     const list = document.querySelector('[role="grid"] [role="row"] a[href*="/messages/"]')?.closest('[role="grid"]') ?? null;
     if (list !== watchedList) {
       listWatcher.disconnect();

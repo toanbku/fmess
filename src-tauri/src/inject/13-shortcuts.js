@@ -45,6 +45,8 @@
   window.addEventListener(
     'keydown',
     (event) => {
+      // In a chat pop-up they would move the pop-up's own hidden list.
+      if (IN_POPUP) return;
       const primary = isMac ? event.metaKey : event.ctrlKey;
       let action = null;
       if (primary && !event.shiftKey && !event.altKey && event.code === 'KeyK') action = ['search'];

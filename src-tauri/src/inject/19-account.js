@@ -49,7 +49,7 @@
       return null;
     }
   };
-  if (!window.opener) {
+  if (!window.opener && !IN_POPUP) {
     window.addEventListener('load', () => setTimeout(() => readContactPicture().catch(() => {}), 2000));
     // Picture links expire; Messenger refreshes the entry.
     setInterval(() => readContactPicture().catch(() => {}), 10 * 60 * 1000);
@@ -63,7 +63,7 @@
 
   // Facebook redraws the chat list header now and then, so check each second.
   setInterval(() => {
-    if (window.opener || !onChatsPage()) return;
+    if (window.opener || IN_POPUP || !onChatsPage()) return;
     account = currentAccount() || account;
     // The header row holds "Chats" and the new message button.
     let header = document.querySelector('a[href="/messages/new/"]');

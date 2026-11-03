@@ -1,6 +1,7 @@
 # The page script
 
-fMess runs one script in the Messenger page (and in the call windows it opens),
+fMess runs one script in the Messenger page (and in the call windows it opens,
+and in a theme's chat pop-ups, frames of the page: `IN_POPUP`, see 01-start),
 before the page's own scripts. It is written here in parts, one per concern, that
 share one function's scope: `build.rs` joins every `.js` file in file-name order
 into `inject.js`, which `webview.rs` puts in the page. So a part can use what an
@@ -24,7 +25,7 @@ earlier part declares, and the numbers set that order.
 | 14-notifications | Web notifications to the system's, with sender and chat; `say` for fMess's own words |
 | 15-unread-badge | The unread count for the Dock and taskbar |
 | 16-read-ahead | Reading recent chats ahead so they open at once |
-| 17-theme-hooks | Buttons, search box and quick reactions themes can ask for |
+| 17-theme-hooks | Buttons, search box, quick reactions, nav and chat pop-ups themes can ask for |
 | 18-notification-reply | Clicks on notifications and replying from them |
 | 19-account | Your picture and the account menu |
 | 20-theme | The theme picked in Settings; settings from fMess; closes the function |
