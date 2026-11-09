@@ -137,6 +137,7 @@
       user-select: none !important;
     }
     /* Redact avatars: flat gray circle without entropy */
+    html[${REDACT}] #fmess-account,
     html[${REDACT}] :is([role="navigation"] [role="row"], [data-fmess-ui="chat-header"], [role="log"], [data-fmess-ui="details"], [role="complementary"]) :is(img:not([src*="emoji.php"]), svg image, [role="img"]:not([aria-label*="emoji"])) {
       filter: grayscale(1) contrast(0) brightness(0.8) !important;
     }
