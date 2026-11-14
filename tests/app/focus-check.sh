@@ -1,8 +1,9 @@
 #!/bin/bash
 # Checks in the real app (macOS, debug build) that the keyboard goes where
 # it is put while a chat is open: a click into the chat list's search field,
-# or ⌘K, then typing, types there and not in the message box (#51), and a
-# message's text can be selected by dragging. Clicks and keys are real
+# or ⌘K, then typing, types there and not in the message box (#51), a
+# message's text can be selected by dragging, and a reply started and dropped
+# leaves the message box its width. Clicks and keys are real
 # window events (probe.rs), not the page's own.
 #
 #   tests/app/focus-check.sh [fresh] [reload] [chats] [network]   (all by default)
