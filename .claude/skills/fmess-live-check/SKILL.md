@@ -93,6 +93,9 @@ minutes. With a chat open, real clicks and keys (see below) check that:
 - a click into the chat list's search field, then typing, types there
 - ⌘K from the message box, then typing, types in the search field
 - dragging across a message's text selects it
+- a reply started (double-click beside a message) and dropped (the bar's ×)
+  leaves the message box its width (the Zalo look of 0.1.35 shrank it to its
+  buttons)
 
 | Case | State |
 |---|---|

@@ -1,6 +1,6 @@
 // Probe for tests/app/focus-check.sh: with a chat open, does a click or a
-// shortcut into another field keep the keyboard there, and can a message's
-// text be selected? Clicks and keys are real ones, sent to the window by
+// shortcut into another field keep the keyboard there, can a message's text
+// be selected, and does the message box keep its width after a reply? Clicks and keys are real ones, sent to the window by
 // probe.rs (window.__fmessInputRequest): a focus() or dispatchEvent() from
 // here took the field every time, even while people's clicks didn't (#51).
 //
@@ -170,6 +170,37 @@ try {
     checks.select = { chars: selected.length, of: text.textContent.trim().length, keyboard: what(document.activeElement) };
     if (selected.length < Math.min(3, text.textContent.trim().length)) failures.push(`message text: dragging selected nothing (keyboard then: ${what(document.activeElement)})`);
     getSelection().removeAllRanges();
+  }
+  // 4. A reply started and dropped (a double-click beside a message, then
+  // the reply bar's ×) leaves the message box its width. In the Zalo look of
+  // 0.1.35 WebKit kept the replying layout once the bar was gone, and the box
+  // shrank to the width of its buttons. Sending a reply ends it the same way;
+  // nothing is sent here.
+  {
+    const width = () => Math.round(composer()?.getBoundingClientRect().width ?? 0);
+    const before = width();
+    const shown = [...document.querySelectorAll('[role="main"] [data-message-id] [dir="auto"]')].filter(
+      (el) => visible(el) && el.getBoundingClientRect().top > 120,
+    );
+    const last = shown.at(-1)?.getBoundingClientRect();
+    const log = document.querySelector('[role="main"] [role="log"]')?.getBoundingClientRect();
+    if (!last || !log) failures.push('reply: no message on screen to reply to');
+    else {
+      // Well beside the bubble: its hover buttons sit right next to it.
+      const theirs = last.left + last.width / 2 < log.left + log.width / 2;
+      const x = theirs ? Math.min(log.right - 30, last.right + 260) : Math.max(log.left + 30, last.left - 260);
+      await input([{ click: [x, last.top + last.height / 2], count: 2 }]);
+      await sleep(1200);
+      const replying = Boolean(document.querySelector('[data-fmess-ui="reply-text"]'));
+      const bar = document.querySelector('[data-fmess-ui="composer-bar"]');
+      const close = bar && [...bar.querySelectorAll('[role="button"]')].filter(visible).at(-1);
+      if (replying && close) await input([{ click: point(close) }]);
+      await sleep(1200);
+      checks.reply = { before, replying, after: width() };
+      if (!replying) failures.push('reply: a double-click beside a message started no reply');
+      else if (document.querySelector('[data-fmess-ui="reply-text"]')) failures.push("reply: the reply bar's × didn't end the reply");
+      else if (width() < before * 0.9) failures.push(`reply: the message box shrank from ${before} to ${width()} px after the reply ended`);
+    }
   }
 } finally {
   HTMLElement.prototype.focus = nativeFocus;
