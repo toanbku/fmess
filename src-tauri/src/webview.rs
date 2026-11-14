@@ -292,6 +292,7 @@ fn configure<'a, R: Runtime, M: Manager<R>>(
         // Call popups need the script too: Facebook checks call support again
         // there. (On macOS a popup shares its opener's scripts and skips these.)
         .initialization_script(initialization_script(app))
+        .initialization_script_for_all_frames(include_str!("audio-idle.js"))
         .on_navigation(move |url| {
             if is_close_window_url(url) {
                 close_popup(&navigation_app, &label);
