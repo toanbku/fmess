@@ -13,8 +13,9 @@
 // FMESS_NO_INJECT=1 (webview.rs) leaves fMess's page script out, to measure
 // what it costs.
 // FMESS_WINDOW_SIZE=<width>x<height> sizes the window first, and
-// FMESS_SNAPSHOT=<file.png> (macOS) then saves a picture of the page as the
-// probe left it, through WebKit, which needs no screen-recording permission.
+// FMESS_SNAPSHOT=<file.png> (macOS, Windows) then saves a picture of the page
+// as the probe left it, through WebKit/WebView2, which needs no
+// screen-recording permission.
 // Always, on stderr: each navigation of every window ([nav]), each popup
 // ([popup]) and the page's JS errors ([page]), URLs without query values
 // (see loggable).
@@ -124,9 +125,9 @@ pub fn run<R: Runtime>(app: AppHandle<R>) {
         let _ = window.eval(&start);
         for _ in 0..wait * 2 {
             thread::sleep(Duration::from_millis(500));
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", windows))]
             serve_snapshot_request(&window);
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", windows))]
             serve_input_request(&window);
             let (tx, rx) = std::sync::mpsc::channel();
             let _ = window.eval_with_callback("window.__fmessProbe ?? null", move |result| {
@@ -160,7 +161,7 @@ pub fn run<R: Runtime>(app: AppHandle<R>) {
                 }
                 Ok(result) if result != "null" => {
                     eprintln!("[probe] {result}");
-                    #[cfg(target_os = "macos")]
+                    #[cfg(any(target_os = "macos", windows))]
                     if let Ok(path) = std::env::var("FMESS_SNAPSHOT") {
                         snapshot(&window, path);
                     }
@@ -173,8 +174,8 @@ pub fn run<R: Runtime>(app: AppHandle<R>) {
     });
 }
 
-/// A probe can click, drag and type as a person does (macOS): real mouse and
-/// key events, sent to the window, go through WebKit like the hand's, which
+/// A probe can click, drag, scroll and type as a person does (macOS, Windows):
+/// real mouse and key events go through WebKit/WebView2 like the hand's, which
 /// a dispatchEvent() or focus() in the page doesn't (the search box that lost
 /// its focus to the message box, #51, kept it under a scripted click). It
 /// sets window.__fmessInputRequest to a list of steps, in the page's CSS
@@ -182,12 +183,13 @@ pub fn run<R: Runtime>(app: AppHandle<R>) {
 ///   {"click": [x, y]}, {"click": [x, y], "count": 2}  (a double click)
 ///   {"rightClick": [x, y]}                             (the context menu)
 ///   {"drag": [x1, y1, x2, y2]}                         (selects text)
-///   {"type": "text"}, {"key": "Escape"} (also Enter, Tab, Backspace)
-/// Posted in the window, not the system, so it needs no Accessibility
-/// permission and doesn't move the pointer. A window that isn't the key one
-/// (another app in front) gets them straight in its web view, and stays
-/// where it is: a test never takes the screen from whoever works on it.
-#[cfg(target_os = "macos")]
+///   {"wheel": [x, y], "deltaX": 0, "deltaY": -120}     (Windows; or [x, y, dx, dy])
+///   {"type": "text"}, {"key": "Escape"} (also Enter, Tab, Backspace, etc.)
+///   optional "modifiers": ["Control", "Shift", "Alt", "Meta"] (Windows)
+/// Posted to the web view, not the system, so it needs no Accessibility
+/// permission, doesn't move the pointer, and leaves a background window where
+/// it is: a test never takes the screen from whoever works on it.
+#[cfg(any(target_os = "macos", windows))]
 fn serve_input_request<R: Runtime>(window: &tauri::WebviewWindow<R>) {
     let (tx, rx) = std::sync::mpsc::channel();
     let _ = window.eval_with_callback("JSON.stringify(window.__fmessInputRequest ?? null)", move |result| {
@@ -204,6 +206,11 @@ fn serve_input_request<R: Runtime>(window: &tauri::WebviewWindow<R>) {
         return;
     };
     let _ = window.eval("window.__fmessInputRequest = null;");
+    dispatch_input(window, steps);
+}
+
+#[cfg(target_os = "macos")]
+fn dispatch_input<R: Runtime>(window: &tauri::WebviewWindow<R>, steps: Vec<serde_json::Value>) {
     let page = window.clone();
     let _ = window.with_webview(move |webview| {
         // SAFETY: Tauri gives the live WKWebView and NSWindow, on the main thread.
@@ -344,7 +351,7 @@ unsafe fn send_input(view: *mut objc2::runtime::AnyObject, ns_window: *mut objc2
 /// one per chat, look and mode): it sets window.__fmessSnapshotRequest to a
 /// file path, and once the picture is saved, window.__fmessSnapshotDone is
 /// that path.
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", windows))]
 fn serve_snapshot_request<R: Runtime>(window: &tauri::WebviewWindow<R>) {
     let (tx, rx) = std::sync::mpsc::channel();
     let _ = window.eval_with_callback("window.__fmessSnapshotRequest ?? null", move |result| {
@@ -397,9 +404,285 @@ fn snapshot<R: Runtime>(window: &tauri::WebviewWindow<R>, path: String) {
     });
 }
 
+#[cfg(windows)]
+fn dispatch_input<R: Runtime>(window: &tauri::WebviewWindow<R>, steps: Vec<serde_json::Value>) {
+    let commands = cdp_commands_for_steps(&steps);
+    let page = window.clone();
+    let _ = window.with_webview(move |webview| {
+        // SAFETY: Tauri gives the live WebView2 controller on the UI thread.
+        let Ok(core) = (unsafe { webview.controller().CoreWebView2() }) else {
+            let _ = page.eval("window.__fmessInputDone = (window.__fmessInputDone || 0) + 1;");
+            return;
+        };
+        run_cdp_sequence(core, commands, page);
+    });
+}
+
+#[cfg(windows)]
+fn run_cdp_sequence<R: Runtime>(
+    core: webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2,
+    mut commands: std::collections::VecDeque<(&'static str, String)>,
+    page: tauri::WebviewWindow<R>,
+) {
+    use webview2_com::CallDevToolsProtocolMethodCompletedHandler;
+    use windows_core::HSTRING;
+
+    let Some((method, params)) = commands.pop_front() else {
+        let _ = page.eval("window.__fmessInputDone = (window.__fmessInputDone || 0) + 1;");
+        return;
+    };
+    let next_core = core.clone();
+    let done_page = page.clone();
+    let handler = CallDevToolsProtocolMethodCompletedHandler::create(Box::new(move |err, _result| {
+        if let Err(err) = err {
+            eprintln!("[input] {method} failed: {err}");
+        }
+        run_cdp_sequence(next_core, commands, done_page);
+        Ok(())
+    }));
+    let method_h = HSTRING::from(method);
+    let params_h = HSTRING::from(params);
+    // SAFETY: COM call on the UI thread with valid HSTRINGs and handler.
+    if let Err(err) = unsafe { core.CallDevToolsProtocolMethod(&method_h, &params_h, &handler) } {
+        eprintln!("[input] {method} dispatch failed: {err}");
+        let _ = page.eval("window.__fmessInputDone = (window.__fmessInputDone || 0) + 1;");
+    }
+}
+
+#[cfg(any(windows, test))]
+fn cdp_modifiers(step: &serde_json::Value) -> i32 {
+    if let Some(mask) = step["modifiers"].as_i64() {
+        return mask as i32;
+    }
+    let Some(list) = step["modifiers"].as_array() else {
+        return 0;
+    };
+    list.iter().filter_map(|v| v.as_str()).fold(0, |mask, name| {
+        mask | match name.to_ascii_lowercase().as_str() {
+            "alt" => 1,
+            "control" | "ctrl" => 2,
+            "meta" | "cmd" | "command" => 4,
+            "shift" => 8,
+            _ => 0,
+        }
+    })
+}
+
+#[cfg(any(windows, test))]
+fn cdp_key_spec(name: &str) -> (String, String, i32, Option<String>) {
+    match name {
+        "Enter" => ("Enter".into(), "Enter".into(), 13, Some("\r".into())),
+        "Tab" => ("Tab".into(), "Tab".into(), 9, None),
+        "Backspace" => ("Backspace".into(), "Backspace".into(), 8, None),
+        "Escape" => ("Escape".into(), "Escape".into(), 27, None),
+        "Delete" => ("Delete".into(), "Delete".into(), 46, None),
+        "ArrowUp" => ("ArrowUp".into(), "ArrowUp".into(), 38, None),
+        "ArrowDown" => ("ArrowDown".into(), "ArrowDown".into(), 40, None),
+        "ArrowLeft" => ("ArrowLeft".into(), "ArrowLeft".into(), 37, None),
+        "ArrowRight" => ("ArrowRight".into(), "ArrowRight".into(), 39, None),
+        "Home" => ("Home".into(), "Home".into(), 36, None),
+        "End" => ("End".into(), "End".into(), 35, None),
+        "PageUp" => ("PageUp".into(), "PageUp".into(), 33, None),
+        "PageDown" => ("PageDown".into(), "PageDown".into(), 34, None),
+        "Space" | " " => (" ".into(), "Space".into(), 32, Some(" ".into())),
+        _ => {
+            if let Some(num) = name.strip_prefix('F').and_then(|s| s.parse::<i32>().ok()) {
+                if (1..=12).contains(&num) {
+                    return (name.into(), name.into(), 111 + num, None);
+                }
+            }
+            let mut chars = name.chars();
+            if let (Some(c), None) = (chars.next(), chars.next()) {
+                if c.is_ascii_alphabetic() {
+                    let upper = c.to_ascii_uppercase();
+                    return (name.into(), format!("Key{upper}"), upper as i32, Some(name.into()));
+                }
+                if c.is_ascii_digit() {
+                    return (name.into(), format!("Digit{c}"), c as i32, Some(name.into()));
+                }
+                return (name.into(), String::new(), 0, Some(name.into()));
+            }
+            (name.into(), name.into(), 0, None)
+        }
+    }
+}
+
+#[cfg(any(windows, test))]
+fn cdp_commands_for_steps(steps: &[serde_json::Value]) -> std::collections::VecDeque<(&'static str, String)> {
+    use serde_json::json;
+
+    let mut out = std::collections::VecDeque::new();
+    let numbers = |value: &serde_json::Value| -> Vec<f64> {
+        value.as_array().map(|list| list.iter().filter_map(|n| n.as_f64()).collect()).unwrap_or_default()
+    };
+    let push_mouse = |out: &mut std::collections::VecDeque<(&'static str, String)>, payload: serde_json::Value| {
+        out.push_back(("Input.dispatchMouseEvent", payload.to_string()));
+    };
+    let push_key = |out: &mut std::collections::VecDeque<(&'static str, String)>,
+                    key: &str,
+                    code: &str,
+                    vk: i32,
+                    text: Option<&str>,
+                    modifiers: i32| {
+        let mut down = json!({
+            "type": if text.is_some() && (modifiers & 7) == 0 { "keyDown" } else { "rawKeyDown" },
+            "key": key,
+            "code": code,
+            "windowsVirtualKeyCode": vk,
+            "nativeVirtualKeyCode": vk,
+            "modifiers": modifiers,
+        });
+        if let Some(t) = text.filter(|_| (modifiers & 7) == 0) {
+            down["text"] = json!(t);
+            down["unmodifiedText"] = json!(t);
+        }
+        out.push_back(("Input.dispatchKeyEvent", down.to_string()));
+        out.push_back((
+            "Input.dispatchKeyEvent",
+            json!({
+                "type": "keyUp",
+                "key": key,
+                "code": code,
+                "windowsVirtualKeyCode": vk,
+                "nativeVirtualKeyCode": vk,
+                "modifiers": modifiers,
+            })
+            .to_string(),
+        ));
+    };
+
+    for step in steps {
+        let modifiers = cdp_modifiers(step);
+        if let [x, y] = numbers(&step["click"])[..] {
+            let count = step["count"].as_i64().unwrap_or(1).max(1);
+            push_mouse(&mut out, json!({ "type": "mouseMoved", "x": x, "y": y, "modifiers": modifiers }));
+            for n in 1..=count {
+                push_mouse(
+                    &mut out,
+                    json!({ "type": "mousePressed", "x": x, "y": y, "button": "left", "buttons": 1, "clickCount": n, "modifiers": modifiers }),
+                );
+                push_mouse(
+                    &mut out,
+                    json!({ "type": "mouseReleased", "x": x, "y": y, "button": "left", "buttons": 0, "clickCount": n, "modifiers": modifiers }),
+                );
+            }
+        } else if let [x, y] = numbers(&step["rightClick"])[..] {
+            push_mouse(&mut out, json!({ "type": "mouseMoved", "x": x, "y": y, "modifiers": modifiers }));
+            push_mouse(
+                &mut out,
+                json!({ "type": "mousePressed", "x": x, "y": y, "button": "right", "buttons": 2, "clickCount": 1, "modifiers": modifiers }),
+            );
+            push_mouse(
+                &mut out,
+                json!({ "type": "mouseReleased", "x": x, "y": y, "button": "right", "buttons": 0, "clickCount": 1, "modifiers": modifiers }),
+            );
+        } else if let [x1, y1, x2, y2] = numbers(&step["drag"])[..] {
+            push_mouse(&mut out, json!({ "type": "mouseMoved", "x": x1, "y": y1, "modifiers": modifiers }));
+            push_mouse(
+                &mut out,
+                json!({ "type": "mousePressed", "x": x1, "y": y1, "button": "left", "buttons": 1, "clickCount": 1, "modifiers": modifiers }),
+            );
+            for i in 1..=10 {
+                let f = f64::from(i) / 10.0;
+                push_mouse(
+                    &mut out,
+                    json!({
+                        "type": "mouseMoved",
+                        "x": x1 + (x2 - x1) * f,
+                        "y": y1 + (y2 - y1) * f,
+                        "button": "left",
+                        "buttons": 1,
+                        "modifiers": modifiers,
+                    }),
+                );
+            }
+            push_mouse(
+                &mut out,
+                json!({ "type": "mouseReleased", "x": x2, "y": y2, "button": "left", "buttons": 0, "clickCount": 1, "modifiers": modifiers }),
+            );
+        } else if let Some(wheel) = step.get("wheel") {
+            let nums = numbers(wheel);
+            let (x, y, dx, dy) = match nums[..] {
+                [x, y] => (
+                    x,
+                    y,
+                    step["deltaX"].as_f64().unwrap_or(0.0),
+                    step["deltaY"].as_f64().unwrap_or(0.0),
+                ),
+                [x, y, dx, dy] => (x, y, dx, dy),
+                _ => continue,
+            };
+            push_mouse(&mut out, json!({ "type": "mouseMoved", "x": x, "y": y, "modifiers": modifiers }));
+            push_mouse(
+                &mut out,
+                json!({ "type": "mouseWheel", "x": x, "y": y, "deltaX": dx, "deltaY": dy, "modifiers": modifiers }),
+            );
+        } else if let Some(text) = step["type"].as_str() {
+            for c in text.chars() {
+                if c == '\n' {
+                    push_key(&mut out, "Enter", "Enter", 13, Some("\r"), modifiers);
+                } else if c.is_ascii_graphic() || c == ' ' {
+                    let s = c.to_string();
+                    let (key, code, vk, txt) = cdp_key_spec(&s);
+                    push_key(&mut out, &key, &code, vk, txt.as_deref(), modifiers);
+                } else {
+                    out.push_back(("Input.insertText", json!({ "text": c.to_string() }).to_string()));
+                }
+            }
+        } else if let Some(name) = step["key"].as_str() {
+            let (key, code, vk, text) = cdp_key_spec(name);
+            push_key(&mut out, &key, &code, vk, text.as_deref(), modifiers);
+        }
+    }
+    out
+}
+
+/// Saves a picture of the page as a PNG via WebView2 DevTools Protocol, then
+/// sets window.__fmessSnapshotDone to its path.
+#[cfg(windows)]
+fn snapshot<R: Runtime>(window: &tauri::WebviewWindow<R>, path: String) {
+    use base64::Engine;
+    use webview2_com::CallDevToolsProtocolMethodCompletedHandler;
+    use windows_core::HSTRING;
+
+    let page = window.clone();
+    let _ = window.with_webview(move |webview| {
+        // SAFETY: Tauri gives the live WebView2 controller on the UI thread.
+        let Ok(core) = (unsafe { webview.controller().CoreWebView2() }) else {
+            return eprintln!("[snapshot] failed: no CoreWebView2");
+        };
+        let done_page = page.clone();
+        let handler = CallDevToolsProtocolMethodCompletedHandler::create(Box::new(move |err, result| {
+            if let Err(err) = err {
+                eprintln!("[snapshot] failed: {err}");
+                return Ok(());
+            }
+            let bytes = serde_json::from_str::<serde_json::Value>(&result)
+                .ok()
+                .and_then(|value| value["data"].as_str().map(str::to_owned))
+                .and_then(|data| base64::engine::general_purpose::STANDARD.decode(data).ok());
+            let Some(bytes) = bytes else {
+                eprintln!("[snapshot] failed: invalid screenshot payload");
+                return Ok(());
+            };
+            let saved = std::fs::write(&path, bytes).is_ok();
+            eprintln!("[snapshot] {} {path}", if saved { "saved" } else { "not saved" });
+            let _ = done_page.eval(format!("window.__fmessSnapshotDone = {};", serde_json::json!(path)));
+            Ok(())
+        }));
+        let method = HSTRING::from("Page.captureScreenshot");
+        let params = HSTRING::from(r#"{"format":"png"}"#);
+        // SAFETY: COM call on the UI thread with valid HSTRINGs and handler.
+        if let Err(err) = unsafe { core.CallDevToolsProtocolMethod(&method, &params, &handler) } {
+            eprintln!("[snapshot] failed: {err}");
+        }
+    });
+}
+
 #[cfg(test)]
 mod tests {
-    use super::loggable;
+    use super::{cdp_commands_for_steps, loggable};
+    use serde_json::json;
     use tauri::Url;
 
     fn log(url: &str) -> String {
@@ -417,5 +700,68 @@ mod tests {
         assert_eq!(log("tel:+84123456789"), "tel:…");
         assert_eq!(log("data:text/plain,hello"), "data:…");
         assert_eq!(log("about:blank"), "about:blank");
+    }
+
+    #[test]
+    fn cdp_steps_cover_mouse_wheel_type_and_keys() {
+        let steps = vec![
+            json!({ "click": [10, 20], "count": 2 }),
+            json!({ "rightClick": [30, 40] }),
+            json!({ "drag": [0, 0, 100, 50] }),
+            json!({ "wheel": [50, 60], "deltaX": 0, "deltaY": -120, "modifiers": ["Control", "Shift"] }),
+            json!({ "wheel": [50, 60, 10, 20] }),
+            json!({ "type": "aế" }),
+            json!({ "key": "Escape" }),
+            json!({ "key": "k", "modifiers": ["Control"] }),
+        ];
+        let cmds: Vec<(&str, serde_json::Value)> = cdp_commands_for_steps(&steps)
+            .into_iter()
+            .map(|(m, p)| (m, serde_json::from_str(&p).unwrap()))
+            .collect();
+
+        // Double click: mouseMoved + 2 * (mousePressed + mouseReleased)
+        assert_eq!(cmds[0].1["type"], "mouseMoved");
+        assert_eq!(cmds[1].1["clickCount"], 1);
+        assert_eq!(cmds[3].1["clickCount"], 2);
+        assert_eq!(cmds[4].1["type"], "mouseReleased");
+        assert_eq!(cmds[4].1["clickCount"], 2);
+
+        // Right click
+        assert_eq!(cmds[6].1["button"], "right");
+        assert_eq!(cmds[6].1["buttons"], 2);
+        assert_eq!(cmds[7].1["type"], "mouseReleased");
+
+        // Drag: move + down + 10 moves + up = 13 commands (indices 8..21)
+        assert_eq!(cmds[9].1["type"], "mousePressed");
+        assert_eq!(cmds[19].1["type"], "mouseMoved");
+        assert_eq!(cmds[19].1["x"], 100.0);
+        assert_eq!(cmds[20].1["type"], "mouseReleased");
+
+        // Wheel with modifiers (Control=2 | Shift=8 = 10)
+        assert_eq!(cmds[22].1["type"], "mouseWheel");
+        assert_eq!(cmds[22].1["deltaY"], -120.0);
+        assert_eq!(cmds[22].1["modifiers"], 10);
+
+        // 4-element wheel shorthand
+        assert_eq!(cmds[24].1["type"], "mouseWheel");
+        assert_eq!(cmds[24].1["deltaX"], 10.0);
+        assert_eq!(cmds[24].1["deltaY"], 20.0);
+
+        // Type ASCII + non-ASCII
+        assert_eq!(cmds[25].0, "Input.dispatchKeyEvent");
+        assert_eq!(cmds[25].1["type"], "keyDown");
+        assert_eq!(cmds[25].1["text"], "a");
+        assert_eq!(cmds[27].0, "Input.insertText");
+        assert_eq!(cmds[27].1["text"], "ế");
+
+        // Escape
+        assert_eq!(cmds[28].1["type"], "rawKeyDown");
+        assert_eq!(cmds[28].1["windowsVirtualKeyCode"], 27);
+
+        // Ctrl+K uses rawKeyDown with no text
+        assert_eq!(cmds[30].1["type"], "rawKeyDown");
+        assert_eq!(cmds[30].1["code"], "KeyK");
+        assert_eq!(cmds[30].1["modifiers"], 2);
+        assert!(cmds[30].1.get("text").is_none());
     }
 }
