@@ -987,6 +987,12 @@ html[data-fmess-chats] [role="main"] [data-message-id] [dir="auto"] {
   font-size: 14px !important;
   line-height: 20px !important;
 }
+/* A quote in a message ("> …"): Messenger draws its bar and text white, for
+   its own dark bubbles; on Teams' light lavender they hardly showed. */
+html[data-fmess-chats] [role="main"] [data-message-id] blockquote {
+  --secondary-text-on-media: var(--tm-fg2) !important;
+  --chat-text-blockquote-color-text-primary-media: var(--tm-quote-bar) !important;
+}
 /* Someone typing: their picture and dots in line with the messages'
    (Messenger sets them 8px further left). */
 html[data-fmess-chats] [role="main"] [role="log"] [aria-hidden="true"]:not([data-message-id] *):has(> div[role="presentation"] + div [role="presentation"]) > div[role="presentation"]:first-child {
@@ -1032,17 +1038,15 @@ html[data-fmess-chats] [role="main"] [data-fmess-ui="composer"]:focus-within {
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] > div:has(+ div [role="textbox"]) {
   display: contents !important;
 }
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] div:has(> span [data-fmess-ui="voice-clip"]),
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] div:has(> span [data-fmess-ui="sticker"]),
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] div:has(> span [data-fmess-ui="gif"]) {
-  display: none !important;
-}
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] > div:has([role="textbox"]) {
   order: 1;
   flex: 1 1 0 !important;
 }
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] div:has(> span [data-fmess-ui="attach"]) {
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] div:has(> span :is([data-fmess-ui="attach"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"])) {
   order: 2;
+}
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] div:has(> span [data-fmess-ui="voice-clip"]) {
+  order: 3;
 }
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] div:has(> span [data-fmess-ui="more-actions"]) {
   order: 3;
@@ -1062,22 +1066,22 @@ html[data-fmess-chats] [role="main"] [data-fmess-ui="composer"]:focus-within {
   background: var(--tm-composer-sep);
   pointer-events: none;
 }
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"]) {
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]) {
   width: 32px !important;
   height: 32px !important;
   border-radius: 4px !important;
   background: transparent !important;
   --hover-overlay: transparent !important;
 }
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"]) svg {
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]) svg {
   width: 16px !important;
   height: 16px !important;
   background: var(--tm-fg2);
 }
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"]) svg * {
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]) svg * {
   visibility: hidden;
 }
-:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"]):hover svg {
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]):hover svg {
   background: var(--tm-brand-icon);
 }
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="emoji"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M10 2C14.4183 2 18 5.58172 18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2ZM10 3C6.13401 3 3 6.13401 3 10C3 13.866 6.13401 17 10 17C13.866 17 17 13.866 17 10C17 6.13401 13.866 3 10 3ZM7.15467 12.4273C8.66416 13.9463 11.0877 14.0045 12.6671 12.5961L12.8453 12.4273C13.04 12.2314 13.3566 12.2304 13.5524 12.4251C13.7265 12.5981 13.7467 12.8674 13.6123 13.0627L13.5547 13.1322L13.5323 13.1545C11.5691 15.1054 8.39616 15.0953 6.44533 13.1322C6.25069 12.9363 6.25169 12.6197 6.44757 12.4251C6.64344 12.2304 6.96002 12.2314 7.15467 12.4273ZM12.5 7.5C13.0523 7.5 13.5 7.94772 13.5 8.5C13.5 9.05228 13.0523 9.5 12.5 9.5C11.9477 9.5 11.5 9.05228 11.5 8.5C11.5 7.94772 11.9477 7.5 12.5 7.5ZM7.5 7.5C8.05228 7.5 8.5 7.94772 8.5 8.5C8.5 9.05228 8.05228 9.5 7.5 9.5C6.94772 9.5 6.5 9.05228 6.5 8.5C6.5 7.94772 6.94772 7.5 7.5 7.5Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
@@ -1086,6 +1090,9 @@ html[data-fmess-chats] [role="main"] [data-fmess-ui="composer"]:focus-within {
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="attach"]:hover svg { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M5.28033 10.6088L10.5836 5.30546C11.6576 4.23151 13.3988 4.23151 14.4727 5.30546C15.5467 6.3794 15.5467 8.1206 14.4727 9.19454L8.10876 15.5585C7.6206 16.0467 6.82915 16.0467 6.34099 15.5585C5.85283 15.0703 5.85283 14.2789 6.34099 13.7907L11.9978 8.13388C12.2907 7.84099 12.2907 7.36612 11.9978 7.07322C11.705 6.78033 11.2301 6.78033 10.9372 7.07322L5.28033 12.7301C4.20639 13.804 4.20639 15.5452 5.28033 16.6192C6.35427 17.6931 8.09548 17.6931 9.16942 16.6192L15.5334 10.2552C17.1931 8.59548 17.1931 5.90452 15.5334 4.2448C13.8737 2.58507 11.1827 2.58507 9.52297 4.2448L4.21967 9.5481C3.92678 9.84099 3.92678 10.3159 4.21967 10.6088C4.51256 10.9017 4.98744 10.9017 5.28033 10.6088Z'/%3E%3C/svg%3E"); }
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="more-actions"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M10 2.5C10 2.22386 9.77614 2 9.5 2C9.22386 2 9 2.22386 9 2.5V9H2.5C2.22386 9 2 9.22386 2 9.5C2 9.77614 2.22386 10 2.5 10H9V16.5C9 16.7761 9.22386 17 9.5 17C9.77614 17 10 16.7761 10 16.5V10H16.5C16.7761 10 17 9.77614 17 9.5C17 9.22386 16.7761 9 16.5 9H10V2.5Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="more-actions"]:hover svg { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M10.5 2.75C10.5 2.33579 10.1642 2 9.75 2C9.33579 2 9 2.33579 9 2.75V9H2.75C2.33579 9 2 9.33579 2 9.75C2 10.1642 2.33579 10.5 2.75 10.5H9V16.75C9 17.1642 9.33579 17.5 9.75 17.5C10.1642 17.5 10.5 17.1642 10.5 16.75V10.5H16.75C17.1642 10.5 17.5 10.1642 17.5 9.75C17.5 9.33579 17.1642 9 16.75 9H10.5V2.75Z'/%3E%3C/svg%3E"); }
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="voice-clip"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M10 2a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM8 5a2 2 0 1 1 4 0v5a2 2 0 1 1-4 0V5ZM5 9.5a.5.5 0 0 0-1 0 6 6 0 0 0 5.5 5.98V17.5a.5.5 0 0 0 1 0v-2.02A6 6 0 0 0 16 9.5a.5.5 0 0 0-1 0 5 5 0 0 1-10 0Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="sticker"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16' fill='none' stroke='black' stroke-linejoin='round'%3E%3Cpath d='M5.5 3.5h9A2 2 0 0 1 16.5 5.5v5.2a2 2 0 0 1-.6 1.4l-3.8 3.8a2 2 0 0 1-1.4.6H5.5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z'/%3E%3Cpath d='M16.4 11.5H14a2 2 0 0 0-2 2v2.4'/%3E%3Cpath d='M7.2 8.2v.4M11.8 8.2v.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+:where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="gif"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='14' height='11' rx='2'/%3E%3Cpath d='M8.2 8.6A1.6 1.6 0 1 0 8.2 11.4V10.5H7.3M10.2 8.4v3.2M12 11.6V8.4h2M12 10h1.5'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="send"] svg { background: var(--tm-brand-icon); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M2.72113 2.05149L18.0756 9.61746C18.3233 9.73952 18.4252 10.0393 18.3031 10.287C18.2544 10.3858 18.1744 10.4658 18.0756 10.5145L2.72144 18.0803C2.47374 18.2023 2.17399 18.1005 2.05193 17.8528C1.99856 17.7445 1.98619 17.6205 2.0171 17.5038L3.9858 10.0701L2.01676 2.62789C1.94612 2.36093 2.10528 2.08726 2.37224 2.01663C2.48893 1.98576 2.61285 1.99814 2.72113 2.05149ZM3.26445 3.43403L4.87357 9.51612L4.93555 9.50412L5 9.5H12C12.2761 9.5 12.5 9.72386 12.5 10C12.5 10.2455 12.3231 10.4496 12.0899 10.4919L12 10.5H5C4.9686 10.5 4.93787 10.4971 4.90807 10.4916L3.26508 16.6976L16.7234 10.066L3.26445 3.43403Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
 :where(html:not([data-fmess-service="instagram"])) [data-fmess-ui="composer"] [data-fmess-ui="send"]:hover svg { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M2.72113 2.05149L18.0756 9.61746C18.3233 9.73952 18.4252 10.0393 18.3031 10.287C18.2544 10.3858 18.1744 10.4658 18.0756 10.5145L2.72144 18.0803C2.47374 18.2023 2.17399 18.1005 2.05193 17.8528C1.99856 17.7445 1.98619 17.6205 2.0171 17.5038L3.53835 11.7591C3.58866 11.5691 3.7456 11.4262 3.93946 11.3939L10.8204 10.2466C10.9047 10.2325 10.9744 10.1769 11.0079 10.1012L11.0259 10.0411C11.0454 9.92436 10.9805 9.81305 10.8759 9.76934L10.8204 9.7534L3.90061 8.6001C3.70668 8.56778 3.54969 8.4248 3.49942 8.23473L2.01676 2.62789C1.94612 2.36093 2.10528 2.08726 2.37224 2.01663C2.48893 1.98576 2.61285 1.99814 2.72113 2.05149Z'/%3E%3C/svg%3E"); }
 /* The like button sends a 👍 (or the chat's emoji) when the box is empty;
@@ -1132,6 +1139,72 @@ html[data-fmess-chats] [role="main"] [data-fmess-ui="composer"]:focus-within {
   font-size: 14px !important;
   line-height: 20px !important;
 }
+
+/* Editing a message: Teams' box again, with ✓ (save) in it after the emoji
+   button, in the brand colour once the text has changed; the bar above it
+   with the title and X (cancel), lined up with the box. */
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-composer"] {
+  align-items: stretch !important;
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-bar"] {
+  padding: 8px 32px 6px !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-bar"] h3 span {
+  color: var(--tm-fg1) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-box"] {
+  padding: 0 32px 24px !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-box"] > div {
+  min-height: 46px !important;
+  padding: 0 6px 0 0 !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  border: 1px solid var(--tm-composer-line) !important;
+  border-radius: 6px !important;
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-box"] > div:focus-within {
+  box-shadow: inset 0 -4px 0 -2px var(--tm-focus-line) !important;
+}
+html[data-fmess-chats] [role="main"] :is(div:has(> [data-fmess-ui="edit-field"]), [data-fmess-ui="edit-field"]) {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  align-items: center !important;
+}
+[data-fmess-ui="edit-field"] [role="textbox"] {
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  --hover-overlay: transparent !important;
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) svg {
+  width: 16px !important;
+  height: 16px !important;
+  background: var(--tm-fg2);
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) svg * {
+  visibility: hidden;
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]:not([aria-disabled="true"])):hover svg,
+[role="main"] [data-fmess-ui="edit-done"]:not([aria-disabled="true"]) svg {
+  background: var(--tm-brand-icon);
+}
+[role="main"] [data-fmess-ui="edit-cancel"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m4.09 4.22.06-.07a.5.5 0 0 1 .63-.06l.07.06L10 9.29l5.15-5.14a.5.5 0 0 1 .63-.06l.07.06c.18.17.2.44.06.63l-.06.07L10.71 10l5.14 5.15c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L10 10.71l-5.15 5.14a.5.5 0 0 1-.63.06l-.07-.06a.5.5 0 0 1-.06-.63l.06-.07L9.29 10 4.15 4.85a.5.5 0 0 1-.06-.63l.06-.07-.06.07Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[role="main"] [data-fmess-ui="edit-cancel"]:hover svg { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m3.9 4.05.07-.08a.75.75 0 0 1 .98-.07l.08.07L10 8.94l4.97-4.97a.75.75 0 0 1 .98-.07l.08.07c.27.27.3.68.07.98l-.07.08L11.06 10l4.97 4.97c.27.27.3.68.07.98l-.07.08a.75.75 0 0 1-.98.07l-.08-.07L10 11.06l-4.97 4.97a.75.75 0 0 1-.98.07l-.08-.07a.75.75 0 0 1-.07-.98l.07-.08L8.94 10 3.97 5.03a.75.75 0 0 1-.07-.98l.07-.08-.07.08Z'/%3E%3C/svg%3E"); }
+[role="main"] [data-fmess-ui="edit-emoji"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M10 2C14.4183 2 18 5.58172 18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2ZM10 3C6.13401 3 3 6.13401 3 10C3 13.866 6.13401 17 10 17C13.866 17 17 13.866 17 10C17 6.13401 13.866 3 10 3ZM7.15467 12.4273C8.66416 13.9463 11.0877 14.0045 12.6671 12.5961L12.8453 12.4273C13.04 12.2314 13.3566 12.2304 13.5524 12.4251C13.7265 12.5981 13.7467 12.8674 13.6123 13.0627L13.5547 13.1322L13.5323 13.1545C11.5691 15.1054 8.39616 15.0953 6.44533 13.1322C6.25069 12.9363 6.25169 12.6197 6.44757 12.4251C6.64344 12.2304 6.96002 12.2314 7.15467 12.4273ZM12.5 7.5C13.0523 7.5 13.5 7.94772 13.5 8.5C13.5 9.05228 13.0523 9.5 12.5 9.5C11.9477 9.5 11.5 9.05228 11.5 8.5C11.5 7.94772 11.9477 7.5 12.5 7.5ZM7.5 7.5C8.05228 7.5 8.5 7.94772 8.5 8.5C8.5 9.05228 8.05228 9.5 7.5 9.5C6.94772 9.5 6.5 9.05228 6.5 8.5C6.5 7.94772 6.94772 7.5 7.5 7.5Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[role="main"] [data-fmess-ui="edit-emoji"]:hover svg { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10ZM7.5 9.5C8.05228 9.5 8.5 9.05228 8.5 8.5C8.5 7.94772 8.05228 7.5 7.5 7.5C6.94772 7.5 6.5 7.94772 6.5 8.5C6.5 9.05228 6.94772 9.5 7.5 9.5ZM11.75 12.5C11.75 11.5335 10.9665 10.75 10 10.75C9.0335 10.75 8.25 11.5335 8.25 12.5C8.25 13.4665 9.0335 14.25 10 14.25C10.9665 14.25 11.75 13.4665 11.75 12.5ZM12.5 9.5C13.0523 9.5 13.5 9.05228 13.5 8.5C13.5 7.94772 13.0523 7.5 12.5 7.5C11.9477 7.5 11.5 7.94772 11.5 8.5C11.5 9.05228 11.9477 9.5 12.5 9.5Z'/%3E%3C/svg%3E"); }
+[role="main"] [data-fmess-ui="edit-done"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M7.03 13.9 3.56 10a.75.75 0 1 0-1.12 1l4 4.5c.29.32.79.34 1.09.03l10.5-10.5a.75.75 0 0 0-1.06-1.06l-9.94 9.94Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[role="main"] [data-fmess-ui="edit-done"][aria-disabled="true"] svg { opacity: 0.5; }
 
 /* Replying (or a link's preview): Teams puts the quote inside the message
    box. The bar above the box and the box read as one bordered box, the bar
@@ -1225,6 +1298,12 @@ html[data-fmess-chats] [role="main"] [data-scope="messages_table"] [role="toolba
 html[data-fmess-chats] [role="main"] [data-scope="messages_table"] > [role="presentation"] > [role="presentation"]:has(> [role="presentation"] > [role="toolbar"]) {
   position: static !important;
 }
+/* Right above the message, as in Teams: the row is what the card hangs
+   from. Without a position of its own, the card hung from the group, above
+   the sender's name, some 30px off the message. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] > [role="presentation"]:has(> [role="presentation"] > [role="presentation"] > [role="toolbar"]) {
+  position: relative !important;
+}
 /* After a quick reaction the card goes, as Messenger's own actions do,
    until the pointer leaves the message (fMess's data-fmess-reacted). Kept
    in place, hidden: Messenger's picker is anchored to its react button. */
@@ -1269,6 +1348,37 @@ html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > 
    focus on one of its buttons. */
 html[data-fmess-chats] [role="main"] [data-scope="messages_table"]:not(:hover):not(:has([aria-expanded="true"], :focus-visible)) [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"]) {
   display: none !important;
+}
+/* A bridge to the card: while a message shows its card, the strip the card
+   hangs in counts as that message, the whole chat wide (the card's own
+   ::before, under its buttons). Messenger gives the actions to whatever
+   message is under the pointer, and on the way up the pointer crossed the
+   one above beside the card (a sender's name, say, a row of its own), and
+   the card was gone before it was reached: on a tall message, whose card
+   is far from the pointer, nearly always. The card stacks above the
+   messages (z-index 2), so its bridge does too. */
+html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -1px;
+  height: 42px;
+  left: -50px;
+  width: 100vw;
+}
+@container style(--tm-own: 1) {
+  html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"])::before {
+    left: auto;
+    right: -8px;
+  }
+}
+/* The card hangs over the message above, and each message sits in a box of
+   its own stacking (position: relative; z-index: 0) that the message above
+   paints over, so the pointer reached that message instead of the card,
+   which it could see, and Messenger moved the actions there. While a
+   message has its card, its box comes first, as Teams' card does. */
+html[data-fmess-chats] [role="main"] [role="log"] div:has(> div > [role="none"] > [role="article"] [role="toolbar"] [role="button"]) {
+  z-index: 1 !important;
 }
 @container style(--tm-own: 1) {
   html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"]) {
@@ -1988,6 +2098,16 @@ html:not([data-fmess-dark]) .__fb-dark-mode {
   --secondary-text: #b0b3b8 !important;
   --primary-icon: #e4e6eb !important;
   --secondary-icon: #b0b3b8 !important;
+}
+
+/* And its light islands on a dark page (toasts again: Facebook draws them the
+   other way round from the page) keep their dark text: the page's light
+   text made them white on white. */
+html[data-fmess-dark] .__fb-light-mode {
+  --primary-text: #050505 !important;
+  --secondary-text: #65676b !important;
+  --primary-icon: #050505 !important;
+  --secondary-icon: #65676b !important;
 }
 /* Tooltips: Facebook draws them in the other mode than the page. Teams'
    are not inverted: a card in the page's colours, dark text on white. */

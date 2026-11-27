@@ -12,7 +12,7 @@ use tauri::{
 
 use crate::{
     i18n::{self, pick, Lang},
-    icon, links,
+    downloads, icon, links,
     services::{self, Service},
     settings::{self, Settings},
     AUTOSTART_ARG, MAIN_WINDOW,
@@ -31,22 +31,33 @@ macro_rules! configure {
             // Call popups need the script too: Facebook checks call support again
             // there. (On macOS a popup shares its opener's scripts and skips these.)
             .initialization_script(initialization_script(app, service))
+            .initialization_script_for_all_frames(include_str!("audio-idle.js"))
             .on_navigation(move |url| {
                 if is_close_window_url(url) {
                     close_popup(&navigation_app, &label);
                     return false;
                 }
-                links::allow_navigation(&navigation_app, service, url)
+                let allowed = links::allow_navigation(&navigation_app, service, url);
+                #[cfg(debug_assertions)]
+                crate::probe::log_navigation(&label, url, allowed);
+                allowed
             })
             .on_new_window(move |url, features| open_popup(&popup_app, service, url, features))
-            // Without a download handler, macOS cancels every download.
-            .on_download(|_, _| true)
+            .on_download(downloads::handle)
             // Tauri takes files dropped on the window for itself (as its own
             // events) and keeps them from the page, so a file or screenshot
             // dragged into a chat did nothing; the pages take them as in a browser.
             .disable_drag_drop_handler()
             // Hidden windows must keep receiving messages (macOS 14+ only).
             .background_throttling(BackgroundThrottlingPolicy::Disabled);
+        // Live checks (tests/app/live-check.sh): the page's traffic through a
+        // local proxy that can cut the network. Debug builds only; on macOS also
+        // the test-proxy feature.
+        #[cfg(debug_assertions)]
+        let builder = match std::env::var("FMESS_PROXY").ok().and_then(|proxy| proxy.parse::<Url>().ok()) {
+            Some(proxy) => builder.proxy_url(proxy),
+            None => builder,
+        };
         match user_agent() {
             Some(user_agent) => builder.user_agent(&user_agent),
             None => builder,
@@ -55,6 +66,8 @@ macro_rules! configure {
 }
 
 pub const SETTINGS_WINDOW: &str = "settings";
+/// Labels of the windows pages open (calls, the photo viewer): popup-1, popup-2...
+pub const POPUP_PREFIX: &str = "popup-";
 
 /// Meta shut messenger.com down in April 2026; chats on the web live here now.
 const MESSAGES_URL: &str = "https://www.facebook.com/messages/";
@@ -126,6 +139,8 @@ pub fn create_main_window<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -
     let webview = window.add_child(messenger, PhysicalPosition::new(0, 0), size)?;
     #[cfg(target_os = "macos")]
     draw_at_screen_rate(&webview);
+    #[cfg(windows)]
+    allow_pinch(&webview);
     if settings.zoom != 1.0 {
         let _ = webview.set_zoom(settings.zoom);
     }
@@ -303,9 +318,39 @@ pub fn set_viewer_open<R: Runtime>(app: AppHandle<R>, open: bool) {
         };
         let _ = window.set_title_bar_style(style);
         set_title_visible(&window, open);
+        if let Some(webview) = services::webview(&app, services::selected(&app)) {
+            focus_page(&webview);
+        }
     }
     #[cfg(not(target_os = "macos"))]
     let _ = (app, open);
+}
+
+/// A touchpad pinch reaches the page, as Ctrl + wheel for the photo viewer's
+/// zoom (12-viewer.js), only while WebView2's pinch zoom is on. Tauri turns it
+/// off along with Ctrl + wheel and Ctrl + -/= (zoom hotkeys), and WebView2
+/// takes a change to it only at the next top-level navigation: turning it on
+/// as the viewer opened did nothing, Messenger being one page. So it is on from
+/// the start, and the window loads its first page again for that, right after
+/// it opens. Ctrl + wheel and Ctrl + -/= stay off (IsZoomControlEnabled); in
+/// the viewer, its zoom takes every Ctrl + wheel, a pinch's too.
+#[cfg(windows)]
+fn allow_pinch<R: Runtime>(webview: &Webview<R>) {
+    use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings5;
+    use windows_core::{Interface, HSTRING};
+
+    let url = messages_url().to_string();
+    let _ = webview.with_webview(move |webview| unsafe {
+        let Ok(core) = webview.controller().CoreWebView2() else {
+            return;
+        };
+        let Ok(settings5) = core.Settings().and_then(|settings| settings.cast::<ICoreWebView2Settings5>()) else {
+            return;
+        };
+        if settings5.SetIsPinchZoomEnabled(true).is_ok() {
+            let _ = core.Navigate(&HSTRING::from(url));
+        }
+    });
 }
 
 /// Shows or hides "fMess" in the title bar; Tauri only sets this at creation.
@@ -329,6 +374,19 @@ fn set_title_visible<R: Runtime>(window: &tauri::Window<R>, visible: bool) {
     });
 }
 
+/// Changing the title bar style leaves the window without a first responder,
+/// so Escape and the arrow keys didn't reach the viewer until it was clicked.
+#[cfg(target_os = "macos")]
+fn focus_page<R: Runtime>(webview: &Webview<R>) {
+    use objc2_app_kit::{NSView, NSWindow};
+
+    let _ = webview.with_webview(|webview| {
+        // SAFETY: Tauri gives the live WKWebView and NSWindow, on the main thread.
+        let (view, ns_window) = unsafe { (&*(webview.inner() as *const NSView), &*(webview.ns_window() as *const NSWindow)) };
+        ns_window.makeFirstResponder(Some(view));
+    });
+}
+
 /// Facebook lands on the news feed after logging in, and Instagram on its
 /// home page, but fMess is for chats. Redirect at most once every few seconds
 /// so a server-side bounce can't loop.
@@ -339,6 +397,7 @@ fn may_redirect(last_redirect: &AtomicU64) -> bool {
     let last = last_redirect.swap(now, Ordering::Relaxed);
     now.saturating_sub(last) >= 5
 }
+
 
 /// WebKit draws overlay scroll bars (thin, shown only while scrolling, moved
 /// by its scrolling thread together with the content) only when AppKit
@@ -409,11 +468,15 @@ fn open_popup<R: Runtime>(
     features: NewWindowFeatures,
 ) -> NewWindowResponse<R> {
     if !links::opens_in_app(service, &url) {
+        #[cfg(debug_assertions)]
+        eprintln!("[popup] opened externally {}", crate::probe::loggable(&url));
         links::open_external(app, &url);
         return NewWindowResponse::Deny;
     }
+    #[cfg(debug_assertions)]
+    eprintln!("[popup] in app {}", crate::probe::loggable(&url));
     static NEXT_POPUP: AtomicUsize = AtomicUsize::new(1);
-    let label = format!("popup-{}", NEXT_POPUP.fetch_add(1, Ordering::Relaxed));
+    let label = format!("{POPUP_PREFIX}{}", NEXT_POPUP.fetch_add(1, Ordering::Relaxed));
     let size = features.size().map(|size| (size.width, size.height));
     let mut builder = WebviewWindowBuilder::new(app, &label, WebviewUrl::External(url))
         .title(settings::current(app).app_name())

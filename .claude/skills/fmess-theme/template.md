@@ -1,7 +1,7 @@
 # The WhatsApp theme as a template
 
-`~/projects/fmess-themes/whatsapp/` is the model for every new theme. The newer
-`~/projects/fmess-themes/teams/` follows the same order and adds what WhatsApp lacks:
+`themes/whatsapp/` is the model for every new theme. The newer
+`themes/teams/` follows the same order and adds what WhatsApp lacks:
 `html[data-fmess-chats]` scoping, a card around `[role="main"]`, a 68px rail with only
 `settings`/`account` as `--fmess-buttons`, row/avatar resizing, Messenger's menus and
 tooltips restyled, reaction pills and the seen receipt, the like-button guard, and
@@ -18,8 +18,8 @@ WhatsApp's files:
 | `build.py` | puts it all in as `data:` URLs |
 
 ```sh
-python3 ~/projects/fmess-themes/whatsapp/build.py ~/projects/herald/src-tauri/themes/whatsapp.css
-# prints the path and the size; today 612,562 bytes, the same file as the one shipped
+python3 themes/whatsapp/build.py            # writes src-tauri/themes/whatsapp.css
+# prints the path and the size; today 613,287 bytes, the same file as the one shipped
 ```
 
 ## build.py and icons.json
@@ -106,7 +106,8 @@ Sections are named by their comment headers. Write a new theme in the same order
     - Each icon is the svg-mask pattern below.
 16. **"Details"** → `[data-fmess-ui="details"]` background, and `::before` writes the title
     "Contact info" (fixed text).
-17. **Tooltips + dark islands**: the two blocks from hooks.md, verbatim.
+17. **Tooltips + mode islands**: the blocks from hooks.md, verbatim (`themes/starter/`
+    has them ready).
 
 ## Rail and Instagram sections (since the rail became its own web view)
 

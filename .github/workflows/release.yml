@@ -52,10 +52,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Both Mac builds on GitHub's Intel Macs, the Apple Silicon one built
+        # for its target from there: its Apple Silicon Macs (macos-latest) ran
+        # short, and 0.1.32's Mac builds were cancelled twice, "not acquired
+        # by Runner" ("capacity constraints ... macOS arm64").
         include:
-          - platform: macos-latest
+          - platform: macos-15-intel
             target: aarch64-apple-darwin
-          - platform: macos-latest
+          - platform: macos-15-intel
             target: x86_64-apple-darwin
           - platform: ubuntu-22.04
             target: ''

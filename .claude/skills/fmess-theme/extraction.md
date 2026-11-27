@@ -31,7 +31,7 @@ for (const sheet of document.styleSheets) {
 ## Where dark values come from, without touching the user's settings
 
 Never switch the account's theme unless the user allowed it for this session. (For Teams
-they did: Settings › Appearance › Theme. The value found was "Follow operating system
+the maintainer did: Settings › Appearance › Theme. The value found was "Follow operating system
 theme", not "Light": note the value before changing it and put back exactly that.)
 Otherwise, in order of preference:
 
@@ -50,13 +50,14 @@ Otherwise, in order of preference:
 
 Five `general-purpose` agents, sent in **one message** so they run in parallel. Each prompt
 is the shared preamble below + its scope. Fill in `<app>`, the URL, the paths and the
-recon findings. If `~/projects/fmess-themes/<app>/spec/` already has a file for a scope,
+recon findings; `<repo>` is the repo's absolute path (agents start elsewhere). If
+`themes/<app>/spec/` already has a file for a scope,
 tell that agent to check and complete it, not redo it.
 
 ### Shared preamble (paste into every agent)
 
 > You are measuring the web app `<app>` (`<url>`) so fMess (a Messenger desktop app) can get
-> a theme that copies its look. Read `~/projects/fmess-themes/<app>/spec/recon.md` first
+> a theme that copies its look. Read `<repo>/themes/<app>/spec/recon.md` first
 > (stable attributes, token system, how dark works). Load the Chrome tools in one
 > ToolSearch call, run `tabs_context_mcp`, then `tabs_create_mcp` and work **only in the tab
 > you created**. Close it when done. Set the window so the page is 880×600 CSS px at 100%
@@ -85,7 +86,7 @@ tell that agent to check and complete it, not redo it.
 >   line-height, letter-spacing.
 > - Unknown or not seen: write `UNMEASURED` and why. A gap is fine; a guess is not.
 >
-> Write your findings to `~/projects/fmess-themes/<app>/spec/<file>` as Markdown tables, one
+> Write your findings to `<repo>/themes/<app>/spec/<file>` as Markdown tables, one
 > per region. Put reference screenshots (`save_to_disk`) in `spec/ref/`. Reply with what
 > you covered, what is UNMEASURED, and anything the theme can't copy.
 

@@ -64,15 +64,20 @@
   // Dragging the zoomed photo; a drag isn't a click on whatever is under it.
   let drag = null;
   let dragged = false;
-  // The photo: the largest image in the viewer (the blurred backdrop behind it
-  // is a small thumbnail, and the thumbnails at the bottom are small).
+  // The photo: the largest image in the viewer (the thumbnails at the bottom
+  // are small). Behind it is a blurred backdrop that covers the window
+  // (object-fit: cover). In an encrypted chat the backdrop is the same
+  // picture, as many pixels, and comes first, so it was the one zoomed while
+  // the photo stayed put (in one-to-one chats, which are encrypted). The
+  // photo shows whole, so one that isn't cropped to cover comes first.
   const viewerPhoto = () => {
     const pixels = (img) => img.naturalWidth * img.naturalHeight;
+    const covers = (img) => (getComputedStyle(img).objectFit === 'cover' ? 1 : 0);
     const layer = viewerLayer();
     return (
       [...(layer ?? document).querySelectorAll(layer ? 'img' : '[role="dialog"] img')]
         .filter((img) => img.getBoundingClientRect().width > 100)
-        .sort((a, b) => pixels(b) - pixels(a))[0] ?? null
+        .sort((a, b) => covers(a) - covers(b) || pixels(b) - pixels(a))[0] ?? null
     );
   };
   const isOn = (el, x, y) => {
@@ -166,12 +171,34 @@
     if (on) window.addEventListener('wheel', onViewerWheel, { capture: true, passive: false });
     else window.removeEventListener('wheel', onViewerWheel, { capture: true });
   }
+  // How much a Ctrl + wheel zooms. Chromium (WebView2) hands a pinch to the
+  // page as Ctrl + wheel, deltaY being -100 × ln of the pinch's scale, so
+  // exp(-deltaY / 100) follows the fingers; no Ctrl key is down then. With
+  // the Ctrl key down it is a mouse wheel or a two-finger scroll, which
+  // zooms as d3-zoom's wheel does: 2^(-deltaY × 0.002), about 15% for a
+  // 100 px notch and as much for the same distance on a touchpad, near
+  // Windows' own zoom (Tauri's is 20% a step). It used to zoom by the pinch's
+  // rule, 2.7 times a notch, then 25% for every event, and a touchpad sends
+  // many. A big step with no Ctrl key seen is a wheel too (the window may
+  // not have had the keyboard).
+  let ctrlKeyDown = false;
+  for (const type of ['keydown', 'keyup', 'mousemove']) {
+    window.addEventListener(type, (event) => (ctrlKeyDown = event.ctrlKey), { capture: true, passive: true });
+  }
+  window.addEventListener('blur', () => (ctrlKeyDown = false));
+  const zoomFactor = (event) => {
+    const pixels = event.deltaY * (event.deltaMode === 1 ? 40 : event.deltaMode === 2 ? 800 : 1);
+    if (!ctrlKeyDown && Math.abs(pixels) < 50) return Math.exp(-pixels / 100);
+    return 2 ** (-Math.min(Math.max(pixels, -120), 120) * 0.002);
+  };
   function onViewerWheel(event) {
     if (!viewerOpen) return;
     if (event.ctrlKey) {
-      if (!startZoom()) return;
+      // Not the page's zoom: on Windows a pinch would zoom the page itself
+      // (see allow_pinch in webview.rs).
       event.preventDefault();
-      zoomAt(zoom.scale * Math.exp(-event.deltaY / 100), event.clientX, event.clientY);
+      if (!startZoom()) return;
+      zoomAt(zoom.scale * zoomFactor(event), event.clientX, event.clientY);
     } else if (zoom) {
       event.preventDefault();
       applyZoom(zoom.scale, zoom.x - event.deltaX, zoom.y - event.deltaY);

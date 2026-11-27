@@ -130,10 +130,22 @@ fn leaves_service(service: Service, url: &Url) -> bool {
 }
 
 pub fn open_external<R: Runtime>(app: &AppHandle<R>, url: &Url) {
-    let target = unwrap_link_shim(url).map_or_else(|| url.clone(), strip_tracking);
+    let Some(target) = external_target(url) else {
+        eprintln!("not opening {url}: the \"{}\" scheme is not allowed", url.scheme());
+        return;
+    };
     if let Err(err) = app.opener().open_url(target.as_str(), None::<&str>) {
         eprintln!("could not open {target}: {err}");
     }
+}
+
+/// The URL to hand to the OS opener, or None if its scheme isn't safe to open.
+/// A page can call window.open() with file:, smb:, search-ms: and so on, and the
+/// OS would open them as is, so only the schemes allow_navigation sends out of
+/// the app get through.
+fn external_target(url: &Url) -> Option<Url> {
+    let target = unwrap_link_shim(url).map_or_else(|| url.clone(), strip_tracking);
+    matches!(target.scheme(), "http" | "https" | "mailto" | "tel").then_some(target)
 }
 
 fn unwrap_link_shim(url: &Url) -> Option<Url> {
@@ -275,5 +287,24 @@ mod tests {
     fn link_shim_must_point_to_the_web() {
         let shim = url("https://l.facebook.com/l.php?u=javascript%3Aalert(1)");
         assert!(unwrap_link_shim(&shim).is_none());
+    }
+
+    #[test]
+    fn only_web_mail_and_phone_links_leave_the_app() {
+        let shim = url("https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.com%2F%3Ffbclid%3Dabc");
+        assert_eq!(external_target(&shim).unwrap().as_str(), "https://example.com/");
+        assert!(external_target(&url("https://github.com/toanbku/fmess")).is_some());
+        assert!(external_target(&url("mailto:a@example.com")).is_some());
+        assert!(external_target(&url("tel:+84123456789")).is_some());
+        for blocked in [
+            "file:///Applications/Calculator.app",
+            "smb://attacker.example/share",
+            "search-ms:query=x&crumb=location:\\\\attacker.example\\share",
+            "ms-msdt:/id PCWDiagnostic",
+            "fb://profile/1",
+            "javascript:alert(1)",
+        ] {
+            assert!(external_target(&url(blocked)).is_none(), "{blocked} should be blocked");
+        }
     }
 }

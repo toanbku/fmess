@@ -441,6 +441,12 @@ html[data-fmess-dark] {
 [role="main"] [data-message-id] [dir="auto"] {
   font-size: 14.2px !important;
 }
+/* A quote in a message ("> …"): Messenger draws its bar and text white, for
+   its own dark bubbles; on WhatsApp's light green they hardly showed. */
+[role="main"] [data-message-id] blockquote {
+  --secondary-text-on-media: var(--wa-text-2) !important;
+  --chat-text-blockquote-color-text-primary-media: var(--wa-text-2) !important;
+}
 
 /* Composer: a white pill floating over the chat, with + and the smiley
    before the box and the microphone after it. */
@@ -502,6 +508,82 @@ html[data-fmess-dark] {
 }
 :where(html:not([data-fmess-service="instagram"])) :is([aria-label="Thread composer"], [data-fmess-ui="composer"]) [role="textbox"] {
   font-size: 15px !important;
+}
+
+/* Editing a message: WhatsApp's edit box. The X before the title; the box a
+   pill like the composer's, the smiley first; ✓ in a green circle beside it,
+   grey until the text changes. */
+[role="main"] [data-fmess-ui="edit-bar"] {
+  padding: 12px 20px 4px !important;
+}
+[role="main"] [data-fmess-ui="edit-bar"] > div:has([data-fmess-ui="edit-cancel"]) {
+  order: -1;
+  margin: 0 10px 0 -6px !important;
+}
+[role="main"] [data-fmess-ui="edit-bar"] h3 span {
+  color: var(--wa-text) !important;
+  font-weight: 500 !important;
+}
+[role="main"] [data-fmess-ui="edit-cancel"] svg {
+  color: var(--wa-icon) !important;
+}
+[role="main"] [data-fmess-ui="edit-box"] {
+  padding: 4px 12px 12px !important;
+}
+[role="main"] [data-fmess-ui="edit-box"] > div {
+  align-items: center !important;
+  gap: 8px;
+}
+[role="main"] div:has(> [data-fmess-ui="edit-field"]) {
+  margin: 0 !important;
+  border-radius: 26px !important;
+  background: transparent !important;
+}
+[role="main"] [data-fmess-ui="edit-field"] {
+  min-height: 52px !important;
+  padding: 0 12px 0 6px !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  border-radius: 26px !important;
+  background: var(--wa-composer) !important;
+  box-shadow: 0 1px 6px var(--wa-shadow) !important;
+}
+[role="main"] [data-fmess-ui="edit-field"] > div:has([data-fmess-ui="edit-emoji"]) {
+  order: -1;
+}
+[role="main"] [data-fmess-ui="edit-field"] [role="textbox"] {
+  font-size: 15px !important;
+}
+[role="main"] [data-fmess-ui="edit-emoji"] {
+  width: 40px !important;
+  height: 40px !important;
+}
+[role="main"] [data-fmess-ui="edit-emoji"] svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-icon);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8.5 10.25a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm8.5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z'/%3E%3Cpath fill-rule='evenodd' d='M16.82 19.98A6.97 6.97 0 0 1 12 22H9.27A7.27 7.27 0 0 1 2 14.73V9.27A7.27 7.27 0 0 1 9.27 2h5.46A7.27 7.27 0 0 1 22 9.27v2.54c0 1.94-.77 3.8-2.15 5.17l-3.03 3ZM14.72 4H9.28A5.27 5.27 0 0 0 4 9.27v5.46A5.27 5.27 0 0 0 9.27 20h2.06a.9.9 0 0 0 .68-.88l-.02-2.26v-.11a5.5 5.5 0 0 1-4.65-2.6.6.6 0 0 1 .03-.6c.12-.2.3-.3.53-.3h5.7a4.8 4.8 0 0 1 3.22-1.23l2.26.01c.5 0 .9-.4.9-.9V9.07H20A5.27 5.27 0 0 0 14.73 4Zm-.71 15.11c0 .15-.01.3-.04.44a4.96 4.96 0 0 0 1.44-.99l3.03-3c.46-.46.83-.99 1.09-1.56-.15.02-.3.03-.46.03h-2.26A2.8 2.8 0 0 0 14 16.84l.02 2.26Z'/%3E%3C/svg%3E") center / 24px 24px no-repeat;
+}
+[role="main"] [data-fmess-ui="edit-done"] {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 24px !important;
+  background: var(--wa-green) !important;
+}
+[role="main"] [data-fmess-ui="edit-done"] svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-on-green);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") center / 24px 24px no-repeat;
+}
+[role="main"] [data-fmess-ui="edit-done"][aria-disabled="true"] {
+  background: var(--wa-input) !important;
+}
+[role="main"] [data-fmess-ui="edit-done"][aria-disabled="true"] svg {
+  background: var(--wa-text-2);
+}
+[role="main"] :is([data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) svg * {
+  visibility: hidden;
 }
 
 /* Details: WhatsApp's "Contact info". */
@@ -873,4 +955,14 @@ html[data-fmess-service="instagram"] [data-fmess-ui="details"] {
   padding-top: var(--fmess-title-bar, 0px) !important;
   background: var(--wa-panel) !important;
   border: 0 !important;
+}
+
+/* And its light islands on a dark page (toasts again: Facebook draws them the
+   other way round from the page) keep their dark text: the page's light
+   text made them white on white. */
+html[data-fmess-dark] .__fb-light-mode {
+  --primary-text: #050505 !important;
+  --secondary-text: #65676b !important;
+  --primary-icon: #050505 !important;
+  --secondary-icon: #65676b !important;
 }

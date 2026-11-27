@@ -34,7 +34,10 @@ Key facts:
 - Resizable panes: drag the edges of the chat list and the chat details; double-click an edge to reset.
 - Themes: Messenger's own look, or Zalo, WhatsApp and Microsoft Teams looks (Messenger underneath), each in light and dark. With the Zalo, WhatsApp or Teams theme, fMess's icon (Dock, taskbar, tray) becomes that app's logo with a small fMess badge while it runs (a switch in Settings turns this off).
 - Hide profile pictures (Settings, Appearance): people's pictures show as their initials, for screens others can see; notifications then go without them.
-- Drag files and screenshots into a chat to send them.
+- Drag files and screenshots into a chat to send them. Copy Image, then paste, sends the picture.
+- Your own app icon and name (Settings, Appearance): a .png or .ico picture as the icon in the Dock, taskbar and tray, and a name on the windows, tray and notifications.
+- Draws up to 120 frames a second on 120 Hz (ProMotion) Macs, like Chrome.
+- Check spelling switch (Settings, General), on by default: turn it off where spell check underlines your language (Vietnamese on a Windows set up in English, say).
 - Links in chats open in the default browser without Facebook's redirect and tracking tags.
 - fMess's own interface (menus, Settings, dialogs) is in English and Vietnamese: it follows the system's language, or the one chosen in Settings. Messenger itself follows the Facebook account's language.
 

@@ -65,6 +65,7 @@
   .row.disabled { opacity: 0.45; }
   .label { flex: 1; }
   .hint { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+  .hint.warning { color: var(--error); }
   kbd { font: inherit; }
 
   .switch { position: relative; width: 38px; height: 22px; flex: none; }
@@ -107,6 +108,7 @@
   select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   button { cursor: pointer; }
   .controls { display: flex; gap: 6px; }
+  #font { max-width: 190px; }
   .themes {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -206,6 +208,12 @@
       </span>
       <span class="switch"><input type="checkbox" data-key="closeToTray"><span></span></span>
     </label>
+    <div class="row">
+      <span class="label"><span data-i18n="updates">Updates</span>
+        <span class="hint"><span id="version"></span> <span data-i18n="updatesHint">You'll be told when a new version is out; check now if you'd rather not wait.</span></span>
+      </span>
+      <button type="button" id="check-updates" data-i18n="checkNow">Check Now</button>
+    </div>
   </div>
 
   <h2>Messenger</h2>
@@ -293,6 +301,12 @@
       </span>
       <span class="switch"><input type="checkbox" data-key="blockTyping"><span></span></span>
     </label>
+    <label class="row">
+      <span class="label"><span data-i18n="redactMode">Redact sensitive content</span>
+        <span class="hint" data-i18n="redactModeHint">Masks message text, contact names, and media for screenshots and screen sharing.</span>
+      </span>
+      <span class="switch"><input type="checkbox" data-key="redactMode"><span></span></span>
+    </label>
   </div>
 
   <h2 data-i18n="appearance">Appearance</h2>
@@ -315,6 +329,16 @@
         <option value="2">200%</option>
       </select>
     </label>
+    <div class="row">
+      <span class="label"><span data-i18n="font">Font</span>
+        <span class="hint" id="font-hint" data-i18n="fontHint">For Messenger's text and the message box, over the theme's. Pick one this computer has, or add a .ttf or .otf file.</span>
+      </span>
+      <span class="controls">
+        <select data-key="font" id="font" aria-label="Font" data-i18n-label="font"></select>
+        <button type="button" id="add-font" data-i18n="add">Add…</button>
+        <button type="button" id="remove-font" data-i18n="remove" hidden>Remove</button>
+      </span>
+    </div>
     <div class="row">
       <span class="label"><span data-i18n="theme">Theme</span>
         <span class="hint" data-i18n="themeHint">How Messenger looks. Add a theme from a .css file.</span>
@@ -342,7 +366,7 @@
     </div>
     <label class="row">
       <span class="label"><span data-i18n="appName">App name</span>
-        <span class="hint" data-i18n="appNameHint">Shown on fMess's windows, tray icon and notifications. The Dock, Start menu and Finder keep the name fMess.</span>
+        <span class="hint" data-i18n="appNameHint">Shown on fMess's windows and tray icon, and on Windows at the top of its notifications. The Dock, menu bar, Start menu and Finder keep the name fMess, as do notifications on a Mac.</span>
       </span>
       <input type="text" data-key="appName" placeholder="fMess" maxlength="40" spellcheck="false" autocomplete="off">
     </label>
@@ -401,6 +425,9 @@
     startHiddenHint: 'Khi tự mở lúc đăng nhập, fMess nằm ở <span data-tray></span> thay vì hiện cửa sổ.',
     closeToTray: 'Vẫn chạy khi đóng cửa sổ',
     closeToTrayHint: 'fMess nằm ở <span data-tray></span> nên vẫn nhận được tin nhắn.',
+    updates: 'Cập nhật',
+    updatesHint: 'Có bản mới sẽ tự báo, không muốn chờ thì bấm kiểm tra ngay.',
+    checkNow: 'Kiểm tra ngay',
     activeStatus: 'Trạng thái hoạt động',
     activeStatusHint: 'Ai thấy được bạn đang hoạt động.',
     change: 'Đổi…',
@@ -433,8 +460,12 @@
     privacy: 'Quyền riêng tư',
     blockTyping: 'Ẩn trạng thái đang nhập',
     blockTypingHint: 'Người khác sẽ không thấy bạn đang soạn tin.',
+    redactMode: 'Che thông tin nhạy cảm',
+    redactModeHint: 'Che tên người chat, nội dung tin nhắn và ảnh/video để tiện chụp màn hình hoặc chia sẻ màn hình.',
     appearance: 'Giao diện',
     textSize: 'Cỡ chữ',
+    font: 'Phông chữ',
+    fontHint: 'Cho chữ trong Messenger và ô nhắn tin, thay cho phông của theme. Chọn phông có sẵn trên máy, hoặc thêm file .ttf, .otf.',
     theme: 'Theme',
     themeHint: 'Giao diện của Messenger. Thêm theme từ file .css.',
     add: 'Thêm…',
@@ -446,7 +477,7 @@
     choose: 'Chọn…',
     reset: 'Đặt lại',
     appName: 'Tên ứng dụng',
-    appNameHint: 'Tên hiện trên cửa sổ, khay hệ thống và thông báo. Riêng Dock, menu Start và Finder vẫn giữ tên fMess.',
+    appNameHint: 'Tên hiện trên cửa sổ, khay hệ thống, và trên Windows là tên ở đầu mỗi thông báo. Dock, thanh menu, menu Start, Finder và thông báo trên Mac vẫn giữ tên fMess.',
     hideAvatars: 'Ẩn ảnh đại diện',
     hideAvatarsHint: 'Chỉ hiện chữ cái đầu của tên, tiện khi người khác nhìn thấy màn hình.',
     darkMode: 'Chế độ tối',
@@ -490,9 +521,13 @@
       const value = view[input.dataset.key];
       // The settings are read again every few seconds; don't undo typing.
       if (input.type === 'text' && input === document.activeElement) continue;
+      // Its list is filled with it (fillFonts).
+      if (input === fontSelect) continue;
       if (input.type === 'checkbox') input.checked = Boolean(value);
       else input.value = String(value ?? '');
     }
+    fillFonts(view.font);
+    showFont();
     for (const row of document.querySelectorAll('[data-needs]')) {
       const enabled = Boolean(view[row.dataset.needs]);
       row.classList.toggle('disabled', !enabled);
@@ -539,8 +574,11 @@
   }
   for (const input of prefInputs) {
     input.addEventListener('change', () => {
-      if (input.value === 'on') return;
       const name = input.dataset.pref;
+      // Do Not Disturb's "Until 10:00" only shows when it ends. A checkbox's
+      // value is "on" too, so asking every input kept Notification sounds
+      // from ever changing (#43).
+      if (name === 'muteFor' && input.value === 'on') return;
       const value = input.type === 'checkbox' ? input.checked : name === 'muteFor' ? Number(input.value) : input.value;
       invoke('set_messenger_pref', { name, value }).then(() => { errorBox.textContent = ''; }, (err) => { errorBox.textContent = String(err); });
     });
@@ -633,10 +671,11 @@
     const { launchAtLogin, platform, messenger, lang: _, ...settings } = current;
     for (const input of inputs) {
       const key = input.dataset.key;
-      // The language is "en", "vi" or none (Automatic); the other selects are numbers.
+      // The language is "en", "vi" or none (Automatic), the font a name or
+      // none (Usual); the other selects are numbers.
       const value =
         input.type === 'checkbox' ? input.checked
-        : input.type === 'text' || key === 'language' ? input.value.trim() || null
+        : input.type === 'text' || key === 'language' || key === 'font' ? input.value.trim() || null
         : Number(input.value);
       if (key === 'launchAtLogin') continue;
       settings[key] = value;
@@ -652,6 +691,103 @@
   }
 
   for (const input of inputs) input.addEventListener('change', save);
+
+  // Font: Usual, the fonts added from files, then the fonts this computer
+  // has. The system lists some names CSS doesn't know (its hidden fonts), so
+  // only the fonts text can be set in are listed: text set in a font measures
+  // unlike the fallback's, with at least one of three fallbacks (a font can
+  // be one of them). A saved font in neither list (typed in an earlier
+  // version, or removed since) stays, with a warning.
+  const fontSelect = document.getElementById('font');
+  const fontHint = document.getElementById('font-hint');
+  const familiesOf = (font) => String(font ?? '').split(',').map((family) => family.trim().replace(/^["']|["']$/g, '').replace(/["\\\n]/g, '')).filter(Boolean);
+  const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
+  const measure = document.createElement('canvas').getContext('2d');
+  const widthIn = (family) => {
+    measure.font = `40px ${family}`;
+    return measure.measureText('mmmmmmmmmmlli WwQq 0123 ĐđẮắỹ').width;
+  };
+  const FALLBACKS = ['monospace', 'serif', 'sans-serif'];
+  let fallbackWidths = null;
+  const installed = (family) => {
+    fallbackWidths ??= FALLBACKS.map(widthIn);
+    return FALLBACKS.some((fallback, i) => widthIn(`"${family}", ${fallback}`) !== fallbackWidths[i]);
+  };
+  let fonts = { installed: [], added: [] };
+  let fontsShown = null;
+  const isAdded = (family) => fonts.added.some((name) => sameName(name, family));
+  function fillFonts(saved) {
+    const shown = JSON.stringify([fonts, saved ?? '', lang]);
+    if (shown === fontsShown) return;
+    fontsShown = shown;
+    const option = (family, text = family) => {
+      const choice = new Option(text, family);
+      if (family) choice.style.fontFamily = `"${family}", system-ui, sans-serif`;
+      return choice;
+    };
+    const group = (label, families) => {
+      const box = document.createElement('optgroup');
+      box.label = label;
+      box.append(...families.map((family) => option(family)));
+      return box;
+    };
+    const choices = [option('', say('Usual', 'Mặc định'))];
+    const listed = (family) => fonts.added.concat(fonts.installed).some((name) => sameName(name, family));
+    if (saved && !listed(saved)) choices.push(option(saved));
+    if (fonts.added.length) choices.push(group(say('Added', 'Đã thêm'), fonts.added));
+    if (fonts.installed.length) choices.push(group(say('On this computer', 'Trên máy'), fonts.installed));
+    fontSelect.replaceChildren(...choices);
+    fontSelect.value = [...fontSelect.options].find((choice) => sameName(choice.value, saved ?? ''))?.value ?? '';
+  }
+  // The select shows the font picked in that font (an added one in the
+  // system's: this window doesn't load the file); Remove is for added fonts.
+  function showFont() {
+    const families = familiesOf(fontSelect.value);
+    fontSelect.style.fontFamily = families.length ? `${families.map((family) => `"${family}"`).join(', ')}, system-ui, sans-serif` : '';
+    const added = families.some(isAdded);
+    document.getElementById('remove-font').hidden = !added;
+    const missing = families.length > 0 && !added && !families.some(installed);
+    fontHint.classList.toggle('warning', missing);
+    fontHint.innerHTML = missing
+      ? say("This computer doesn't have this font, so Messenger keeps its own.", 'Máy này không có phông chữ này nên Messenger vẫn giữ phông cũ.')
+      : (lang === 'vi' ? VI.fontHint : english.get(fontHint) ?? fontHint.innerHTML);
+  }
+  fontSelect.addEventListener('change', showFont);
+  async function loadFonts() {
+    try {
+      const list = await invoke('list_fonts');
+      fonts = { added: list.added, installed: list.installed.filter(installed) };
+    } catch {}
+    fontsShown = null;
+    if (current) {
+      fillFonts(current.font);
+      showFont();
+    }
+  }
+  loadFonts();
+  document.getElementById('add-font').addEventListener('click', async () => {
+    try {
+      const family = await invoke('add_font');
+      if (!family) return;
+      await loadFonts();
+      fillFonts(family);
+      await save();
+    } catch (err) {
+      showError(err);
+    }
+  });
+  document.getElementById('remove-font').addEventListener('click', async () => {
+    const family = familiesOf(fontSelect.value).find(isAdded);
+    if (!family) return;
+    try {
+      await invoke('remove_font', { family });
+      await loadFonts();
+      fillFonts(null);
+      await save();
+    } catch (err) {
+      showError(err);
+    }
+  });
   document.getElementById('test-notification').addEventListener('click', () => {
     const result = document.getElementById('test-result');
     invoke('test_notification').then(
@@ -664,6 +800,14 @@
       (err) => { result.textContent = say(`Couldn't send: ${err}`, `Không gửi được: ${err}`); },
     );
   });
+  // Its answer (up to date, a new version to install, or an error) is a
+  // dialog from fMess, as from the menu's Check for Updates….
+  document.getElementById('check-updates').addEventListener('click', () => {
+    invoke('check_for_updates').catch(showError);
+  });
+  invoke('plugin:app|version').then((version) => {
+    document.getElementById('version').textContent = `fMess ${version}.`;
+  }, () => {});
   invoke('get_settings').then(render, (err) => { errorBox.textContent = String(err); });
   // Messenger's preferences may change while this is
   // open: on the phone, in Messenger's own dialog, or by a change made here.

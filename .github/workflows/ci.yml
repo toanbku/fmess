@@ -27,5 +27,15 @@ jobs:
           workspaces: './src-tauri -> target'
       - run: cargo test --manifest-path src-tauri/Cargo.toml
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-      # The page script's reply from a notification (Node is on every runner).
+      # Parts of the page script against fakes (Node is on every runner): the
+      # reply from a notification, fMess's own notification, Messenger's sounds,
+      # the photo viewer's zoom, getting Messenger back by itself, the marks
+      # themes style; and what the Settings window sends for Messenger's
+      # Preferences.
       - run: node tests/notification-reply.mjs
+      - run: node tests/fallback-notification.mjs
+      - run: node tests/sounds.mjs
+      - run: node tests/viewer-zoom.mjs
+      - run: node tests/recover.mjs
+      - run: node tests/settings-prefs.mjs
+      - run: node tests/marks.mjs

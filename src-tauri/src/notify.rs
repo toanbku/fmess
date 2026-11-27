@@ -70,7 +70,10 @@ fn remember(id: i32, service: Service) {
 
 /// Called by the services' pages whenever they create a web `Notification`.
 /// `icon` is its picture and `image` a photo in the message (base64);
-/// `message` says who wrote in which chat, when the page knows.
+/// `message` says who wrote in which chat, when the page knows. `sound`: it
+/// rings with the system's sound (Windows only; see inject.js shouldRing).
+// A command's arguments are the fields the page sends.
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn notify<R: Runtime>(
     webview: Webview<R>,
@@ -80,16 +83,18 @@ pub async fn notify<R: Runtime>(
     icon: Option<String>,
     image: Option<String>,
     message: Option<Message>,
+    sound: Option<bool>,
 ) -> Result<(), String> {
     let app = webview.app_handle();
     // Popups (call windows) notify for Messenger.
     let service = Service::from_label(webview.label()).unwrap_or(Service::Messenger);
     #[cfg(debug_assertions)]
     eprintln!(
-        "[fmess] notify #{id} from {}: {title} (thread {:?}, group {})",
+        "[fmess] notify #{id} from {}: {title} (thread {:?}, group {}, sound {})",
         service.label(),
         message.as_ref().map(|message| &message.thread),
-        message.as_ref().is_some_and(|message| message.group.is_some())
+        message.as_ref().is_some_and(|message| message.group.is_some()),
+        sound.unwrap_or(false)
     );
     let settings = settings::current(app);
     if !settings.notifications {
@@ -139,14 +144,23 @@ pub async fn notify<R: Runtime>(
     } else {
         (settings.app_name().to_owned(), new_message.to_owned())
     };
-    app.notification()
-        .builder()
-        .id(id)
-        .title(title)
-        .body(body)
-        .extra(SERVICE_EXTRA, service)
-        .show()
-        .map_err(|err| err.to_string())
+    let builder = app.notification().builder().id(id).title(title).body(body).extra(SERVICE_EXTRA, service);
+    with_sound(builder, sound.unwrap_or(false)).show().map_err(|err| err.to_string())
+}
+
+/// A Windows notification with no sound named plays none (tauri-plugin-
+/// notification's toast says `<audio silent="true"/>`); "Default" is Windows'
+/// own notification sound, as a browser's notifications use. Elsewhere
+/// notifications stay silent: Messenger plays its own sound in the page.
+fn with_sound<R: Runtime>(
+    builder: tauri_plugin_notification::NotificationBuilder<R>,
+    sound: bool,
+) -> tauri_plugin_notification::NotificationBuilder<R> {
+    if cfg!(windows) && sound {
+        builder.sound("Default")
+    } else {
+        builder
+    }
 }
 
 /// The Settings window's Send Test Notification: shows one through the same
@@ -160,23 +174,31 @@ pub fn test_notification<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
         communication::show(communication::Notification::plain(0, title, body));
         return Ok(());
     }
-    app.notification()
-        .builder()
-        .title(title)
-        .body(body)
-        .show()
-        .map_err(|err| err.to_string())
+    // It rings as a message's would.
+    let builder = app.notification().builder().title(title).body(body);
+    with_sound(builder, settings::messenger_sounds_on(&app)).show().map_err(|err| err.to_string())
 }
 
 /// Windows shows notifications only from apps it knows by their app ID
 /// (AppUserModelID): the installer's Start menu shortcut carries it, but the
 /// MSI's doesn't, and a copy run from elsewhere has none. So fMess registers
-/// the ID itself, with its name and icon, and runs under it.
+/// the ID itself, with its name and icon, and runs under it. The name is the
+/// one at the top of each notification: the App name from Settings.
 #[cfg(windows)]
-pub fn register_app_id<R: Runtime>(app: &AppHandle<R>) {
-    use windows_sys::Win32::{
-        System::Registry::{RegCloseKey, RegCreateKeyExW, RegSetValueExW, HKEY, HKEY_CURRENT_USER, KEY_WRITE, REG_OPTION_NON_VOLATILE, REG_SZ},
-        UI::Shell::SetCurrentProcessExplicitAppUserModelID,
+pub fn register_app_id<R: Runtime>(app: &AppHandle<R>, name: &str) {
+    use windows_sys::Win32::UI::Shell::SetCurrentProcessExplicitAppUserModelID;
+
+    let id = app.config().identifier.encode_utf16().chain(Some(0)).collect::<Vec<u16>>();
+    unsafe { SetCurrentProcessExplicitAppUserModelID(id.as_ptr()) };
+    name_app_id(app, name);
+}
+
+/// Writes the app ID's name and icon where Windows reads them for each
+/// notification; called again when the App name changes in Settings.
+#[cfg(windows)]
+pub fn name_app_id<R: Runtime>(app: &AppHandle<R>, name: &str) {
+    use windows_sys::Win32::System::Registry::{
+        RegCloseKey, RegCreateKeyExW, RegSetValueExW, HKEY, HKEY_CURRENT_USER, KEY_WRITE, REG_OPTION_NON_VOLATILE, REG_SZ,
     };
 
     let wide = |text: &str| text.encode_utf16().chain(Some(0)).collect::<Vec<u16>>();
@@ -186,9 +208,7 @@ pub fn register_app_id<R: Runtime>(app: &AppHandle<R>) {
         let _ = icon.parent().map(std::fs::create_dir_all);
         let _ = std::fs::write(icon, include_bytes!("../icons/128x128@2x.png"));
     }
-    let id_wide = wide(&id);
     unsafe {
-        SetCurrentProcessExplicitAppUserModelID(id_wide.as_ptr());
         let mut key: HKEY = std::ptr::null_mut();
         let path = wide(&format!(r"Software\Classes\AppUserModelId\{id}"));
         let opened = RegCreateKeyExW(
@@ -205,12 +225,12 @@ pub fn register_app_id<R: Runtime>(app: &AppHandle<R>) {
         if opened != 0 {
             return;
         }
-        let set = |name: &str, value: &str| {
-            let name = wide(name);
+        let set = |value_name: &str, value: &str| {
+            let value_name = wide(value_name);
             let value = wide(value);
-            RegSetValueExW(key, name.as_ptr(), 0, REG_SZ, value.as_ptr().cast(), (value.len() * 2) as u32);
+            RegSetValueExW(key, value_name.as_ptr(), 0, REG_SZ, value.as_ptr().cast(), (value.len() * 2) as u32);
         };
-        set("DisplayName", &app.package_info().name);
+        set("DisplayName", name);
         if let Some(icon) = icon {
             set("IconUri", &icon.to_string_lossy());
         }

@@ -42,6 +42,8 @@ trải nghiệm như ứng dụng gốc.
 - **Ẩn trạng thái đang nhập.** Đối phương không thấy "đang nhập…" khi bạn soạn tin.
 - **Cài đặt Messenger tập trung.** Âm thanh, Không làm phiền, Dark Mode và trạng
   thái hoạt động nằm cạnh cài đặt của fMess, đồng bộ với điện thoại.
+- **Theme.** Giao diện Messenger gốc, hoặc kiểu Zalo, WhatsApp, Teams, đủ cả sáng lẫn
+  tối. Tự thêm theme của bạn từ một file CSS.
 - **Tối ưu bàn phím.** Phím tắt bên dưới; mở đoạn chat là con trỏ nằm sẵn trong ô soạn tin.
 - **Zoom ảnh mượt mà.** Chụm hai ngón hoặc nhấp đúp trong trình xem ảnh.
 - **Luôn chạy nền.** Badge tin chưa đọc trên Dock hoặc taskbar, biểu tượng trên
@@ -109,6 +111,15 @@ fMess hiển thị facebook.com/messages (và instagram.com/direct nếu bạn b
 máy chủ riêng và không gửi dữ liệu phân tích. Trang web chỉ được nhờ fMess làm vài
 việc như hiện thông báo (`src-tauri/capabilities/messenger-web.json`, `instagram-web.json`), không đọc
 được file hay chạy chương trình trên máy bạn.
+
+## Tự làm theme
+
+Theme chỉ là một file CSS, thêm vào ở **Cài đặt › Theme › Thêm…**. Muốn đổi màu theo ý
+mình thì bắt đầu từ [`themes/starter/starter.css`](themes/starter/starter.css). Muốn giao
+diện giống một app khác thì nhờ coding agent dùng skill trong
+[`.claude/skills/fmess-theme`](.claude/skills/fmess-theme/SKILL.md), chỉ cần gửi screenshot
+của app đó. Chi tiết và cách gửi theme lên cho mọi người dùng nằm ở
+[`themes/README.md`](themes/README.md).
 
 ## Build từ mã nguồn
 

@@ -1,0 +1,117 @@
+name: Bug report / Báo lỗi
+description: Something in fMess doesn't work / Có gì đó trong fMess không chạy đúng
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! English or Vietnamese, both are fine.
+        Cảm ơn bạn đã báo lỗi! Viết tiếng Việt hay tiếng Anh đều được.
+
+  - type: input
+    id: version
+    attributes:
+      label: fMess version / Phiên bản fMess
+      description: |
+        In Settings, under Updates, or in About fMess (macOS: the fMess menu; Windows and Linux: the menu of fMess's icon in the tray).
+        Xem trong Cài đặt, mục Cập nhật, hoặc Giới thiệu về fMess (macOS: menu fMess; Windows và Linux: menu của icon fMess ở khay hệ thống).
+      placeholder: "0.1.29"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system / Hệ điều hành
+      options:
+        - "macOS (Apple Silicon: M1, M2…)"
+        - macOS (Intel)
+        - Windows 11
+        - Windows 10
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version / Phiên bản hệ điều hành
+      description: |
+        On Linux, also the distribution and how you installed fMess (.deb, .rpm, AppImage).
+        Trên Linux, ghi thêm bản phân phối và cách cài fMess (.deb, .rpm, AppImage).
+      placeholder: "macOS 15.6 / Windows 11 24H2 / Ubuntu 24.04, .deb"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme (Settings → Appearance) / Theme (Cài đặt → Giao diện)
+      options:
+        - Messenger (default / mặc định)
+        - Zalo
+        - WhatsApp
+        - Teams
+    validations:
+      required: false
+
+  - type: dropdown
+    id: chats
+    attributes:
+      label: Which chats? / Ở đoạn chat nào?
+      description: |
+        End-to-end encrypted chats show a lock 🔒 in the chat's details. They work differently, so it matters.
+        Đoạn chat mã hoá đầu cuối có hình ổ khoá 🔒 trong phần thông tin đoạn chat. Loại này chạy khác, nên cần biết.
+      options:
+        - End-to-end encrypted / Mã hoá đầu cuối
+        - Not encrypted / Không mã hoá
+        - Both / Cả hai
+        - Not about chats / Không liên quan đoạn chat
+        - Not sure / Không rõ
+    validations:
+      required: false
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Chuyện gì xảy ra?
+      description: |
+        And what you expected instead.
+        Và bạn mong nó chạy thế nào.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Các bước để gặp lại lỗi
+      placeholder: |
+        1. Open a chat… / Mở một đoạn chat…
+        2. Click… / Bấm vào…
+        3. …
+    validations:
+      required: false
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Same in a browser? / Trên trình duyệt có bị không?
+      description: |
+        At facebook.com/messages in Chrome or Safari. If it happens there too, it's on Facebook's side.
+        Ở facebook.com/messages trên Chrome hay Safari. Nếu ở đó cũng bị thì lỗi từ phía Facebook.
+      options:
+        - Didn't try / Chưa thử
+        - "No, only in fMess / Không, chỉ fMess bị"
+        - "Yes, there too / Có, ở đó cũng bị"
+    validations:
+      required: false
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or a video / Ảnh chụp hoặc video
+      description: |
+        Drag them here. Hide names and messages you don't want public.
+        Kéo thả vào đây. Che tên và tin nhắn bạn không muốn công khai.
+    validations:
+      required: false

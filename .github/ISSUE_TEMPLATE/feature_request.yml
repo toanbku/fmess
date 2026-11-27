@@ -1,0 +1,38 @@
+name: Idea / Góp ý tính năng
+description: Something fMess could do / Điều fMess nên có
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        English or Vietnamese, both are fine.
+        Viết tiếng Việt hay tiếng Anh đều được.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like? / Bạn muốn có gì?
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: What would it help with? / Nó giúp được gì cho bạn?
+      description: |
+        What you do today without it, or what the old Messenger app did.
+        Hiện giờ thiếu nó bạn phải làm sao, hoặc app Messenger cũ từng làm thế nào.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system / Hệ điều hành
+      multiple: true
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: false

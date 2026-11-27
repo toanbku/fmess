@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/remote-schema.json",
   "identifier": "messenger-web",
-  "description": "Lets facebook.com/messages show and clear native notifications, report its unread chat count and your name and picture for the rail, switch the title bar for the photo viewer, open the account menu, use the menu bar's shortcuts on Windows and Linux, report Messenger's preferences, keep the widths its panes are dragged to, fold the rail with a theme's sidebar button, keep Facebook's bar shown or hidden and drag the window by its title strip, and nothing else.",
+  "description": "Lets facebook.com/messages show and clear native notifications, report its unread chat count and your name and picture for the rail, switch the title bar for the photo viewer, open the account menu, use the menu bar's shortcuts on Windows and Linux, report Messenger's preferences, keep the widths its panes are dragged to, fold the rail with a theme's sidebar button, keep Facebook's bar shown or hidden, drag the window by its title strip and show a finished download in its folder, start fMess again when its encrypted chats stay stuck after a reload, and let the notification plugin's page script ask whether notifications are allowed, and nothing else.",
   "webviews": [
     "messenger"
   ],
@@ -23,6 +23,9 @@
     "allow-set-pane-widths",
     "allow-set-sidebar-collapsed",
     "allow-open-settings",
+    "notification:allow-is-permission-granted",
+    "allow-show-download",
+    "allow-restart-for-stuck-chats",
     "core:window:allow-start-dragging",
     "core:window:allow-internal-toggle-maximize"
   ]

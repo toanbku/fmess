@@ -1,0 +1,589 @@
+/* fMess theme
+   name: WhatsApp
+   preview: #f7f5f3 #ffffff #f5f1eb #d9fdd3 #ffffff
+*/
+
+/* WhatsApp's own font. */
+@font-face {
+  font-family: "fMess Roboto";
+  src: url("{{font}}") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+/* WhatsApp's colours, light and, while Messenger is dark, dark. */
+:root {
+  --wa-rail: #f7f5f3;
+  --wa-panel: #ffffff;
+  --wa-chat: #f5f1eb;
+  --wa-bubble-in: #ffffff;
+  --wa-bubble-out: #d9fdd3;
+  --wa-composer: #ffffff;
+  --wa-input: rgba(194, 189, 184, 0.15);
+  --wa-hover: rgba(194, 189, 184, 0.15);
+  --wa-selected: rgba(194, 189, 184, 0.25);
+  --wa-chip-on: #d9fdd3;
+  --wa-chip-on-text: #15603e;
+  --wa-chip-line: rgba(0, 0, 0, 0.2);
+  --wa-date: rgba(255, 255, 255, 0.9);
+  --wa-text: #0a0a0a;
+  --wa-text-2: rgba(0, 0, 0, 0.6);
+  --wa-icon: #0a0a0a;
+  --wa-green: #1daa61;
+  --wa-on-green: #ffffff;
+  --wa-wordmark: #1daa61;
+  --wa-new-chat: #1daa61;
+  --wa-new-chat-icon: #ffffff;
+  --wa-accent: #1b8755;
+  --wa-shadow: rgba(0, 0, 0, 0.12);
+}
+html[data-fmess-dark] {
+  --wa-rail: #1d1f1f;
+  --wa-panel: #161717;
+  --wa-chat: #171818;
+  --wa-bubble-in: #242626;
+  --wa-bubble-out: #144d37;
+  --wa-composer: #242626;
+  --wa-input: rgba(255, 255, 255, 0.1);
+  --wa-hover: rgba(255, 255, 255, 0.1);
+  --wa-selected: rgba(255, 255, 255, 0.1);
+  --wa-chip-on: #242626;
+  --wa-chip-on-text: #f4f4f4;
+  --wa-chip-line: rgba(255, 255, 255, 0.1);
+  --wa-date: #1d1f1f;
+  --wa-text: #fafafa;
+  --wa-text-2: rgba(255, 255, 255, 0.6);
+  --wa-icon: #fafafa;
+  --wa-green: #21c063;
+  --wa-on-green: #0a0a0a;
+  --wa-wordmark: #fafafa;
+  --wa-new-chat: #fafafa;
+  --wa-new-chat-icon: #0a0a0a;
+  --wa-accent: #21c063;
+  --wa-shadow: rgba(0, 0, 0, 0.12);
+}
+/* Messenger's own colours, in WhatsApp's. */
+:root,
+.__fb-dark-mode,
+.__fb-light-mode,
+[style*="--chat-outgoing-message-bubble-background-color"] {
+  --accent: var(--wa-green) !important;
+  --primary-button-background: var(--wa-green) !important;
+  --primary-deemphasized-button-background: var(--wa-chip-on) !important;
+  --primary-deemphasized-button-text: var(--wa-chip-on-text) !important;
+  --text-highlight: rgba(29, 170, 97, 0.25) !important;
+  --primary-text: var(--wa-text) !important;
+  --primary-icon: var(--wa-icon) !important;
+  --secondary-text: var(--wa-text-2) !important;
+  --secondary-icon: var(--wa-text-2) !important;
+  --placeholder-text: var(--wa-text-2) !important;
+  --placeholder-icon: var(--wa-text-2) !important;
+  --blue-link: var(--wa-accent) !important;
+  --divider: transparent !important;
+  --web-wash: var(--wa-panel) !important;
+  --surface-background: var(--wa-panel) !important;
+  --card-background: var(--wa-panel) !important;
+  --messenger-card-background: var(--wa-panel) !important;
+  --comment-background: var(--wa-input) !important;
+  --input-background: var(--wa-input) !important;
+  --secondary-button-background: var(--wa-input) !important;
+  --hover-overlay: var(--wa-hover) !important;
+  --popover-background: var(--wa-panel) !important;
+  --notification-badge: var(--wa-green) !important;
+
+  --chat-bubble-border-radius: 7.5px !important;
+  --chat-bubble-padding-vertical: 6px !important;
+  --chat-bubble-padding-horizontal: 9px !important;
+  --chat-outgoing-message-bubble-background-color: var(--wa-bubble-out) !important;
+  --chat-outgoing-message-background-gradient: initial !important;
+  --chat-incoming-message-bubble-background-color: var(--wa-bubble-in) !important;
+  --chat-message-text-color: var(--wa-text) !important;
+  --chat-incoming-message-text-color: var(--wa-text) !important;
+  --chat-admin-text-color: var(--wa-text-2) !important;
+  --chat-replied-message-background-color: var(--wa-input) !important;
+  --chat-composer-background-color: transparent !important;
+  --chat-composer-input-background-color: transparent !important;
+  --chat-composer-button-color: var(--wa-icon) !important;
+  --chat-composer-caret-color: var(--wa-green) !important;
+  --chat-edit-message-overlay-color: var(--wa-input) !important;
+  --chat-scrollbar-thumb-color: var(--wa-text-2) !important;
+  --mwp-primary-theme-color: var(--wa-green) !important;
+  --mwp-header-background-color: var(--wa-panel) !important;
+  --mwp-header-button-color: var(--wa-icon) !important;
+  --mwp-header-text-color: var(--wa-text) !important;
+  --mwp-subheader-text-color: var(--wa-text-2) !important;
+  --mwp-message-row-background: transparent !important;
+  --reaction-pill-background-color: var(--wa-bubble-in) !important;
+  --reaction-pill-multireact-selected-color: var(--wa-chip-on) !important;
+}
+html,
+html body,
+html :is(div, span, a, h1, h2, h3, h4, input, textarea, button, label, p) {
+  font-family: "fMess Roboto", "Helvetica Neue", Helvetica, -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif !important;
+}
+
+/* The strip under the window buttons: the bar's colour, then the panes'. */
+html::before {
+  content: "";
+  position: fixed;
+  z-index: 2147483000;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height, 0px);
+  background: linear-gradient(to right, var(--wa-rail) 64px, var(--wa-panel) 64px);
+  pointer-events: none;
+}
+
+/* The bar down the left with WhatsApp's icons, your picture at the bottom. */
+[role="navigation"] {
+  position: relative !important;
+  padding-left: 64px !important;
+  box-sizing: border-box !important;
+  --fmess-buttons: chats 12 10 40, calls 12 54 40, status 12 98 40, channels 12 142 40, communities 12 186 40, media 12 -54 40, account 12 -8 40;
+}
+[role="navigation"]::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  background:
+    radial-gradient(closest-side, var(--wa-hover) 97%, transparent 100%) var(--fmess-hover-left, -100px) var(--fmess-hover-top, -100px) / 40px 40px no-repeat,
+    radial-gradient(closest-side, var(--wa-hover) 97%, transparent 100%) 12px 10px / 40px 40px no-repeat,
+    var(--wa-rail);
+}
+[role="navigation"]::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  pointer-events: none;
+  background: var(--fmess-avatar, linear-gradient(var(--wa-text-2), var(--wa-text-2))) 18px calc(100% - 14px) / 28px 28px no-repeat, var(--wa-icon);
+  -webkit-mask:
+    {{icon:wds-ic-chat-filled}} 20px 18px / 24px 24px no-repeat,
+    {{icon:ic-call}} 20px 62px / 24px 24px no-repeat,
+    {{icon:wds-ic-status}} 20px 106px / 24px 24px no-repeat,
+    {{icon:wds-ic-channels}} 20px 150px / 24px 24px no-repeat,
+    {{icon:wds-ic-communities}} 20px 194px / 24px 24px no-repeat,
+    {{icon:ic-filter}} 20px calc(100% - 62px) / 24px 24px no-repeat,
+    radial-gradient(circle 14px at 32px calc(100% - 28px), #000 96%, transparent 100%);
+}
+/* Unread chats on the Chats button, as WhatsApp's green count. */
+html[data-fmess-unread]::after {
+  content: attr(data-fmess-unread);
+  position: fixed;
+  z-index: 2147483000;
+  left: 34px;
+  top: calc(var(--header-height, 0px) + 8px);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: var(--wa-green);
+  color: var(--wa-on-green);
+  font: 600 11px/18px "fMess Roboto", system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+html[data-fmess-media]::before,
+html[data-fmess-media]::after {
+  display: none !important;
+}
+
+/* Chat list: "WhatsApp" in green over a round search box and pill filters. */
+#fmess-account {
+  display: none !important;
+}
+[role="navigation"] {
+  background: var(--wa-panel) !important;
+}
+[role="navigation"] h1 a {
+  display: inline-block !important;
+  width: 104px !important;
+  height: 28px !important;
+  color: transparent !important;
+  background: var(--wa-wordmark) !important;
+  -webkit-mask: {{icon:wa-wordmark}} left center / 104px 28px no-repeat;
+}
+[role="navigation"] h1 a * {
+  visibility: hidden !important;
+}
+[role="navigation"] a[href="/messages/new/"] {
+  --secondary-button-background: var(--wa-new-chat) !important;
+  --hover-overlay: rgba(0, 0, 0, 0.1) !important;
+}
+[role="navigation"] a[href="/messages/new/"] svg {
+  background: var(--wa-new-chat-icon);
+  -webkit-mask: {{icon:ic-add}} center / 24px 24px no-repeat;
+}
+[role="navigation"] a[href="/messages/new/"] svg * {
+  visibility: hidden;
+}
+[role="navigation"] label:has(input[type="search"]) {
+  height: 40px !important;
+  border-radius: 20px !important;
+  background: var(--wa-input) !important;
+}
+[role="navigation"] label:has(input[type="search"]) svg {
+  background: var(--wa-text-2);
+  -webkit-mask: {{icon:ic-search}} center / 20px 20px no-repeat;
+}
+[role="navigation"] label:has(input[type="search"]) svg * {
+  visibility: hidden;
+}
+[role="navigation"] input[type="search"] {
+  font-size: 15px !important;
+}
+[role="navigation"] input[type="search"]::placeholder {
+  color: transparent !important;
+}
+[role="navigation"] label:has(input[type="search"]) {
+  position: relative !important;
+}
+[role="navigation"] label:has(input[type="search"]:placeholder-shown)::after {
+  content: "Search or start a new chat";
+  position: absolute;
+  left: 46px;
+  top: 0;
+  font: 400 15px/40px "fMess Roboto", system-ui, sans-serif;
+  color: var(--wa-text-2);
+  pointer-events: none;
+}
+[role="navigation"] :is([aria-label="Settings, help and more"], [data-fmess-ui="list-menu"]) {
+  --secondary-button-background: transparent !important;
+}
+[role="navigation"] :is([aria-label="Settings, help and more"], [data-fmess-ui="list-menu"]) svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-icon);
+  -webkit-mask: {{icon:ic-more-vert}} center / 24px 24px no-repeat;
+}
+[role="navigation"] :is([aria-label="Settings, help and more"], [data-fmess-ui="list-menu"]) svg * {
+  visibility: hidden;
+}
+[role="navigation"] [role="tablist"] {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  gap: 2px !important;
+  height: 36px !important;
+  align-items: center !important;
+}
+[role="navigation"] [role="tablist"] > * {
+  flex: none !important;
+}
+[role="navigation"] [role="tablist"] > :not(:has([role="tab"])) {
+  display: none !important;
+}
+[role="navigation"] [role="tab"] {
+  height: 32px !important;
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--wa-chip-line) !important;
+  border-radius: 16px !important;
+  background: transparent !important;
+  --primary-deemphasized-button-text: var(--wa-text-2) !important;
+  --primary-text: var(--wa-text-2) !important;
+  --secondary-text: var(--wa-text-2) !important;
+}
+[role="navigation"] [role="tab"][aria-selected="true"] {
+  border-color: transparent !important;
+  background: var(--wa-chip-on) !important;
+  --primary-deemphasized-button-text: var(--wa-chip-on-text) !important;
+  --primary-text: var(--wa-chip-on-text) !important;
+  --secondary-text: var(--wa-chip-on-text) !important;
+}
+[role="navigation"] [role="tab"] span {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+[role="navigation"] [role="row"] a[role="link"] {
+  border-radius: 12px !important;
+}
+[role="navigation"] [role="row"] a[role="link"]:hover {
+  background: var(--wa-hover) !important;
+}
+[role="navigation"] [role="row"] a[aria-current="page"] {
+  background: var(--wa-selected) !important;
+}
+
+/* Chat: WhatsApp's beige, or dark, with its doodles: a picture on a layer of
+   its own, drawn once (on the chat itself it was redrawn on every scroll). */
+:root {
+  --wa-doodle: url("{{doodle:#eee7dd}}");
+}
+html[data-fmess-dark] {
+  --wa-doodle: url("{{doodle:#252626}}");
+}
+[role="main"] [data-mw-file-dropzone] {
+  position: relative !important;
+  isolation: isolate;
+  background: var(--wa-chat) !important;
+  --messenger-card-background: transparent !important;
+}
+[role="main"] [data-mw-file-dropzone]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--wa-doodle) 0 0 / 412.5px 749.25px repeat;
+  will-change: transform;
+  pointer-events: none;
+}
+[role="main"] [data-mw-file-dropzone] [style*="background-image"]:has([role="log"]) {
+  background: transparent !important;
+}
+
+/* Header: flat, a soft shadow under it, WhatsApp's icons. */
+[role="main"] [data-fmess-ui="chat-header"] {
+  position: relative !important;
+  z-index: 1 !important;
+  background: var(--wa-panel) !important;
+  box-shadow: 0 1px 4px var(--wa-shadow) !important;
+  border-bottom: 0 !important;
+}
+[role="main"] [data-fmess-ui="chat-header"] h3 span {
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: var(--wa-text) !important;
+}
+[role="main"] :is(:is([aria-label="Start a voice call"], [data-fmess-ui="audio-call"]), :is([aria-label="Start a video call"], [data-fmess-ui="video-call"]), :is([aria-label="Conversation information"], [data-fmess-ui="info"])) svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-icon);
+}
+[role="main"] :is(:is([aria-label="Start a voice call"], [data-fmess-ui="audio-call"]), :is([aria-label="Start a video call"], [data-fmess-ui="video-call"]), :is([aria-label="Conversation information"], [data-fmess-ui="info"])) svg * {
+  visibility: hidden;
+}
+[role="main"] :is([aria-label="Start a voice call"], [data-fmess-ui="audio-call"]) svg {
+  -webkit-mask: {{icon:ic-call}} center / 24px 24px no-repeat;
+}
+[role="main"] :is([aria-label="Start a video call"], [data-fmess-ui="video-call"]) svg {
+  -webkit-mask: {{icon:ic-videocam}} center / 24px 24px no-repeat;
+}
+[role="main"] :is([aria-label="Conversation information"], [data-fmess-ui="info"]) svg {
+  -webkit-mask: {{icon:ic-more-vert}} center / 24px 24px no-repeat;
+}
+
+/* Dates: WhatsApp's little chips. */
+[role="main"] [data-scope="date_break"] > span > span {
+  display: inline-block !important;
+  padding: 5px 12px 6px !important;
+  border-radius: 7.5px !important;
+  background: var(--wa-date) !important;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13) !important;
+  color: var(--wa-text-2) !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  line-height: 15px !important;
+}
+
+/* Bubbles: WhatsApp's corners and type size. */
+[role="main"] [data-message-id] [role="presentation"] {
+  border-radius: 7.5px !important;
+}
+[role="main"] [data-message-id] [dir="auto"] {
+  font-size: 14.2px !important;
+}
+/* A quote in a message ("> …"): Messenger draws its bar and text white, for
+   its own dark bubbles; on WhatsApp's light green they hardly showed. */
+[role="main"] [data-message-id] blockquote {
+  --secondary-text-on-media: var(--wa-text-2) !important;
+  --chat-text-blockquote-color-text-primary-media: var(--wa-text-2) !important;
+}
+
+/* Composer: a white pill floating over the chat, with + and the smiley
+   before the box and the microphone after it. */
+[role="main"] [role="region"]:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) {
+  margin: 0 12px 12px !important;
+  min-height: 52px !important;
+  padding: 0 8px !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  border-radius: 26px !important;
+  background: var(--wa-composer) !important;
+  box-shadow: 0 1px 6px var(--wa-shadow) !important;
+}
+[role="main"] div:has(> [role="region"]:is([aria-label="Thread composer"], [data-fmess-ui="composer"])) {
+  background: transparent !important;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) > div:has(+ div [role="textbox"]) {
+  display: contents !important;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) div:has(> span :is([aria-label="Attach a file up to 100 MB"], [data-fmess-ui="attach"])),
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) div:has(> span :is([aria-label="Open more actions"], [data-fmess-ui="more-actions"])) { order: 1; }
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) div:has(> span :is([aria-label="Choose a sticker"], [data-fmess-ui="sticker"])) { order: 2; }
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) div:has(> span :is([aria-label="Choose a GIF"], [data-fmess-ui="gif"])) { display: none !important; }
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) > div:has([role="textbox"]) { order: 3; flex: 1 1 0 !important; }
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) div:has(> span :is([aria-label="Send a voice clip"], [data-fmess-ui="voice-clip"])) { order: 4; }
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) > span { order: 5; }
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) > span:has([role="button"]:is([aria-label^="Send a"], [data-fmess-ui="like"])) { display: none !important; }
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is(:is([aria-label="Attach a file up to 100 MB"], [data-fmess-ui="attach"]), :is([aria-label="Open more actions"], [data-fmess-ui="more-actions"]), :is([aria-label="Choose a sticker"], [data-fmess-ui="sticker"]), :is([aria-label="Send a voice clip"], [data-fmess-ui="voice-clip"])) svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-icon);
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is(:is([aria-label="Attach a file up to 100 MB"], [data-fmess-ui="attach"]), :is([aria-label="Open more actions"], [data-fmess-ui="more-actions"]), :is([aria-label="Choose a sticker"], [data-fmess-ui="sticker"]), :is([aria-label="Send a voice clip"], [data-fmess-ui="voice-clip"])) svg * {
+  visibility: hidden;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is(:is([aria-label="Attach a file up to 100 MB"], [data-fmess-ui="attach"]), :is([aria-label="Open more actions"], [data-fmess-ui="more-actions"])) svg {
+  -webkit-mask: {{icon:ic-add}} center / 24px 24px no-repeat;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is([aria-label="Choose a sticker"], [data-fmess-ui="sticker"]) svg {
+  -webkit-mask: {{icon:wds-ic-sticker-smiley}} center / 24px 24px no-repeat;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is([aria-label="Send a voice clip"], [data-fmess-ui="voice-clip"]) svg {
+  -webkit-mask: {{icon:ic-mic}} center / 24px 24px no-repeat;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is([aria-label="Press enter to send"], [data-fmess-ui="send"]) {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 20px !important;
+  background: var(--wa-green) !important;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is([aria-label="Press enter to send"], [data-fmess-ui="send"]) svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-on-green);
+  -webkit-mask: {{icon:ic-send-filled}} center / 24px 24px no-repeat;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) :is([aria-label="Press enter to send"], [data-fmess-ui="send"]) svg * {
+  visibility: hidden;
+}
+:is([aria-label="Thread composer"], [data-fmess-ui="composer"]) [role="textbox"] {
+  font-size: 15px !important;
+}
+
+/* Editing a message: WhatsApp's edit box. The X before the title; the box a
+   pill like the composer's, the smiley first; ✓ in a green circle beside it,
+   grey until the text changes. */
+[role="main"] [data-fmess-ui="edit-bar"] {
+  padding: 12px 20px 4px !important;
+}
+[role="main"] [data-fmess-ui="edit-bar"] > div:has([data-fmess-ui="edit-cancel"]) {
+  order: -1;
+  margin: 0 10px 0 -6px !important;
+}
+[role="main"] [data-fmess-ui="edit-bar"] h3 span {
+  color: var(--wa-text) !important;
+  font-weight: 500 !important;
+}
+[role="main"] [data-fmess-ui="edit-cancel"] svg {
+  color: var(--wa-icon) !important;
+}
+[role="main"] [data-fmess-ui="edit-box"] {
+  padding: 4px 12px 12px !important;
+}
+[role="main"] [data-fmess-ui="edit-box"] > div {
+  align-items: center !important;
+  gap: 8px;
+}
+[role="main"] div:has(> [data-fmess-ui="edit-field"]) {
+  margin: 0 !important;
+  border-radius: 26px !important;
+  background: transparent !important;
+}
+[role="main"] [data-fmess-ui="edit-field"] {
+  min-height: 52px !important;
+  padding: 0 12px 0 6px !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  border-radius: 26px !important;
+  background: var(--wa-composer) !important;
+  box-shadow: 0 1px 6px var(--wa-shadow) !important;
+}
+[role="main"] [data-fmess-ui="edit-field"] > div:has([data-fmess-ui="edit-emoji"]) {
+  order: -1;
+}
+[role="main"] [data-fmess-ui="edit-field"] [role="textbox"] {
+  font-size: 15px !important;
+}
+[role="main"] [data-fmess-ui="edit-emoji"] {
+  width: 40px !important;
+  height: 40px !important;
+}
+[role="main"] [data-fmess-ui="edit-emoji"] svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-icon);
+  -webkit-mask: {{icon:wds-ic-sticker-smiley}} center / 24px 24px no-repeat;
+}
+[role="main"] [data-fmess-ui="edit-done"] {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 24px !important;
+  background: var(--wa-green) !important;
+}
+[role="main"] [data-fmess-ui="edit-done"] svg {
+  width: 24px !important;
+  height: 24px !important;
+  background: var(--wa-on-green);
+  -webkit-mask: {{icon:ic-check}} center / 24px 24px no-repeat;
+}
+[role="main"] [data-fmess-ui="edit-done"][aria-disabled="true"] {
+  background: var(--wa-input) !important;
+}
+[role="main"] [data-fmess-ui="edit-done"][aria-disabled="true"] svg {
+  background: var(--wa-text-2);
+}
+[role="main"] :is([data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) svg * {
+  visibility: hidden;
+}
+
+/* Details: WhatsApp's "Contact info". */
+[role="main"] [data-fmess-ui="details"] {
+  background: var(--wa-panel) !important;
+  box-shadow: none !important;
+}
+[role="main"] [data-fmess-ui="details"]::before {
+  content: "Contact info";
+  display: block;
+  flex: none;
+  height: 64px;
+  padding-left: 24px;
+  font: 400 16px/64px "fMess Roboto", system-ui, sans-serif;
+  color: var(--wa-text);
+}
+
+/* Tooltips: Facebook draws them in the other mode than the page, dark on a
+   light page and light on a dark one; their text follows their background. */
+[role="tooltip"] .__fb-dark-mode,
+[role="tooltip"].__fb-dark-mode {
+  --primary-text: #f5f6f7 !important;
+  --secondary-text: #b0b3b8 !important;
+  --primary-icon: #f5f6f7 !important;
+  --secondary-icon: #b0b3b8 !important;
+}
+[role="tooltip"] .__fb-light-mode,
+[role="tooltip"].__fb-light-mode {
+  --primary-text: #050505 !important;
+  --secondary-text: #65676b !important;
+  --primary-icon: #050505 !important;
+  --secondary-icon: #65676b !important;
+}
+
+/* Facebook's dark islands on a light page (toasts such as "All chats
+   loaded.", tooltips, the photo viewer) keep their light text. */
+html:not([data-fmess-dark]) .__fb-dark-mode {
+  --primary-text: #e4e6eb !important;
+  --secondary-text: #b0b3b8 !important;
+  --primary-icon: #e4e6eb !important;
+  --secondary-icon: #b0b3b8 !important;
+}
+
+/* And its light islands on a dark page (toasts again: Facebook draws them the
+   other way round from the page) keep their dark text: the page's light
+   text made them white on white. */
+html[data-fmess-dark] .__fb-light-mode {
+  --primary-text: #050505 !important;
+  --secondary-text: #65676b !important;
+  --primary-icon: #050505 !important;
+  --secondary-icon: #65676b !important;
+}

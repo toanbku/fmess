@@ -1,6 +1,6 @@
 [package]
 name = "fmess"
-version = "0.1.27"
+version = "0.1.37"
 description = "Unofficial desktop client for Messenger on the web"
 authors = ["toanbku"]
 license = "MIT"
@@ -27,6 +27,16 @@ tauri-plugin-dialog = "2.7.3"
 tokio = { version = "1.53.3", features = ["time"] }
 # The system's preferred language, for fMess's own words (see i18n.rs).
 sys-locale = "0.3"
+# Settings › Font: the fonts the system has, and the names in a font file.
+fontdb = "0.24"
+ttf-parser = "0.25"
+
+[features]
+# Live checks only (tests/app/live-check.sh): lets a debug build's page go
+# through a local proxy (FMESS_PROXY) that can cut the network. On macOS that
+# needs macOS 14 (Network.framework proxies), above fMess's minimum, so it is
+# never in a release build.
+test-proxy = ["tauri/macos-proxy"]
 
 [profile.release]
 codegen-units = 1
@@ -56,7 +66,9 @@ objc2-foundation = { version = "0.3.2", default-features = false, features = [
     "NSAttributedString",
     "NSData",
     "NSDictionary",
+    "NSDistributedNotificationCenter",
     "NSError",
+    "NSNotification",
     "NSObject",
     "NSRange",
     "NSSet",
@@ -94,4 +106,7 @@ objc2-user-notifications = { version = "0.3.2", default-features = false, featur
 ] }
 
 [target.'cfg(windows)'.dependencies]
+# The photo viewer turns WebView2's zoom gestures on and off (webview.rs).
+webview2-com = "0.39"
+windows-core = "0.62"
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_System_Registry", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }

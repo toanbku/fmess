@@ -43,9 +43,30 @@
   const SERVICE_KEYS = { Digit1: 'messenger', Digit2: 'instagram' };
   // With Ctrl+Shift (Ctrl+Shift+= is Ctrl++ on most keyboards).
   const MENU_SHIFT_KEYS = { KeyH: 'messages', Equal: 'zoom-in' };
+  // Escape cancels a voice clip being recorded or replayed, like its X button
+  // (marked by 09-marks). Pictures and dialogs keep Escape for themselves.
   window.addEventListener(
     'keydown',
     (event) => {
+      if (event.key !== 'Escape' || event.isComposing || event.defaultPrevented) return;
+      if (document.querySelector('[role="dialog"], [role="menu"]')) return;
+      const cancel = [...document.querySelectorAll('[data-fmess-ui="record-cancel"]')].find(isVisible);
+      if (!cancel) return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancel.click();
+    },
+    true,
+  );
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (!isMac && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && event.code === 'F11') {
+        event.preventDefault();
+        event.stopPropagation();
+        invoke('menu_shortcut', { id: 'toggle-fullscreen' }).catch(() => {});
+        return;
+      }
       const primary = isMac ? event.metaKey : event.ctrlKey;
       // Ctrl+Cmd+1/2 switch services (menu.rs); on macOS the menu bar takes
       // them. Windows keeps Ctrl+Win+digit, so there and on Linux: Ctrl+Alt+1/2.

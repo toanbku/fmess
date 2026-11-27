@@ -1,0 +1,147 @@
+/* fMess theme
+   name: Starter
+   preview: #f3f6f6 #ffffff #eef3f2 #0f8b7d #ffffff
+*/
+
+/* A starting point for a theme of your own: Messenger's layout, your colours.
+   Change the tokens below (light first, then dark), rename the file and the
+   name above, and load it in fMess: Settings > Theme > Add…
+   The five preview colours draw the theme's card in Settings: the bar at the
+   left, the chat list, the chat, your messages, theirs.
+   A theme is CSS only: no @import, and no url() other than data: ones.
+   What else a theme can hook into: .claude/skills/fmess-theme/hooks.md. */
+
+/* The theme's colours, light and, while Messenger is dark, dark. Every rule
+   below uses only these, so dark mode is just the second block. */
+:root {
+  --my-brand: #0f8b7d;              /* buttons, links, unread dots, the caret */
+  --my-brand-soft: #d7efeb;         /* the selected tab, soft buttons */
+  --my-brand-soft-text: #0b6157;
+  --my-page: #ffffff;               /* the chat list, header, panes, menus */
+  --my-chat: #eef3f2;               /* behind the messages */
+  --my-field: #edf1f1;              /* search box, grey buttons */
+  --my-hover: rgba(15, 139, 125, 0.08);
+  --my-line: #dde5e4;
+  --my-text: #0e1716;
+  --my-text-2: #5b6b69;
+  --my-icon: #2c3b39;
+  --my-out: #0f8b7d;                /* your messages */
+  --my-out-text: #ffffff;
+  --my-in: #ffffff;                 /* their messages */
+  --my-in-text: #0e1716;
+  --my-selection: rgba(15, 139, 125, 0.25);
+}
+html[data-fmess-dark] {
+  --my-brand: #3cc2b2;
+  --my-brand-soft: #173d39;
+  --my-brand-soft-text: #8fe3d8;
+  --my-page: #141b1a;
+  --my-chat: #0e1413;
+  --my-field: #222b2a;
+  --my-hover: rgba(255, 255, 255, 0.07);
+  --my-line: #26302f;
+  --my-text: #e8efee;
+  --my-text-2: #93a3a0;
+  --my-icon: #c9d5d3;
+  --my-out: #1f7f74;
+  --my-out-text: #ffffff;
+  --my-in: #222b2a;
+  --my-in-text: #e8efee;
+  --my-selection: rgba(60, 194, 178, 0.3);
+}
+
+/* Messenger's own colours, in the theme's. Facebook declares them again on
+   its mode islands and on each chat's colour host, hence the four selectors.
+   The fourth puts the theme's colours over each chat's own (a chat theme
+   someone picked in Messenger), as every shipped theme does. */
+:root,
+.__fb-dark-mode,
+.__fb-light-mode,
+[style*="--chat-outgoing-message-bubble-background-color"] {
+  --accent: var(--my-brand) !important;
+  --primary-button-background: var(--my-brand) !important;
+  --mwp-primary-theme-color: var(--my-brand) !important;
+  --primary-deemphasized-button-background: var(--my-brand-soft) !important;
+  --primary-deemphasized-button-text: var(--my-brand-soft-text) !important;
+  --text-highlight: var(--my-selection) !important;
+  --primary-text: var(--my-text) !important;
+  --secondary-text: var(--my-text-2) !important;
+  --placeholder-text: var(--my-text-2) !important;
+  --primary-icon: var(--my-icon) !important;
+  --secondary-icon: var(--my-text-2) !important;
+  --placeholder-icon: var(--my-text-2) !important;
+  --blue-link: var(--my-brand) !important;
+  --divider: var(--my-line) !important;
+  --web-wash: var(--my-page) !important;
+  --surface-background: var(--my-page) !important;
+  --card-background: var(--my-page) !important;
+  --messenger-card-background: var(--my-page) !important;
+  --popover-background: var(--my-page) !important;
+  --comment-background: var(--my-field) !important;
+  --input-background: var(--my-field) !important;
+  --secondary-button-background: var(--my-field) !important;
+  --hover-overlay: var(--my-hover) !important;   /* keep it see-through */
+
+  /* Messages. Leave the radius and padding out to keep Messenger's shape. */
+  --chat-bubble-border-radius: 16px !important;
+  --chat-outgoing-message-bubble-background-color: var(--my-out) !important;
+  --chat-outgoing-message-background-gradient: initial !important;
+  --chat-message-text-color: var(--my-out-text) !important;
+  --chat-incoming-message-bubble-background-color: var(--my-in) !important;
+  --chat-incoming-message-text-color: var(--my-in-text) !important;
+  --chat-admin-text-color: var(--my-text-2) !important;
+  --chat-replied-message-background-color: var(--my-field) !important;
+  --chat-composer-background-color: var(--my-page) !important;
+  --chat-composer-input-background-color: var(--my-field) !important;
+  --chat-composer-button-color: var(--my-brand) !important;
+  --chat-composer-caret-color: var(--my-brand) !important;
+  --chat-edit-message-overlay-color: var(--my-field) !important;
+  --chat-scrollbar-thumb-color: var(--my-text-2) !important;
+  --mwp-header-background-color: var(--my-page) !important;
+  --mwp-header-button-color: var(--my-brand) !important;
+  --mwp-header-text-color: var(--my-text) !important;
+  --mwp-subheader-text-color: var(--my-text-2) !important;
+  --mwp-message-row-background: transparent !important;
+  --reaction-pill-background-color: var(--my-page) !important;
+  --reaction-pill-multireact-selected-color: var(--my-brand-soft) !important;
+}
+
+/* The chat's background, under every chat's own colour or picture. */
+[role="main"] [data-mw-file-dropzone] {
+  background-color: var(--my-chat) !important;
+}
+[data-mw-file-dropzone] [style*="background-image"]:has([role="log"]) {
+  background: transparent !important;
+}
+
+/* Keep these two blocks at the end of every theme. Facebook draws tooltips
+   and toasts the other way round from the page (dark on a light page, light
+   on a dark one), so their text must follow their own background. */
+[role="tooltip"] .__fb-dark-mode,
+[role="tooltip"].__fb-dark-mode {
+  --primary-text: #f5f6f7 !important;
+  --secondary-text: #b0b3b8 !important;
+  --primary-icon: #f5f6f7 !important;
+  --secondary-icon: #b0b3b8 !important;
+}
+[role="tooltip"] .__fb-light-mode,
+[role="tooltip"].__fb-light-mode {
+  --primary-text: #050505 !important;
+  --secondary-text: #65676b !important;
+  --primary-icon: #050505 !important;
+  --secondary-icon: #65676b !important;
+}
+html:not([data-fmess-dark]) .__fb-dark-mode {
+  --primary-text: #e4e6eb !important;
+  --secondary-text: #b0b3b8 !important;
+  --primary-icon: #e4e6eb !important;
+  --secondary-icon: #b0b3b8 !important;
+  --secondary-button-background: #3a3b3c !important;   /* a toast's close button */
+}
+html[data-fmess-dark] .__fb-light-mode {
+  --primary-text: #050505 !important;
+  --secondary-text: #65676b !important;
+  --primary-icon: #050505 !important;
+  --secondary-icon: #65676b !important;
+  --secondary-button-background: #e4e6eb !important;
+}

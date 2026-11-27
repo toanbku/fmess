@@ -1,0 +1,41 @@
+name: Windows test build
+
+# A Windows build of a branch, to try a change before it is released: the
+# installer and fmess.exe (runs without installing), kept as this run's
+# artifact for 14 days. No release and no update files, so no signing key.
+# It runs when a pull request has the "test build" label (and again on each
+# push while it has it), or by hand: Actions → Windows test build → Run
+# workflow, on any branch.
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize]
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'test build')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+      - run: npm ci
+      - run: npx tauri build --bundles nsis
+      - name: Collect the installer and the app
+        shell: bash
+        run: |
+          mkdir out
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe out/
+          cp src-tauri/target/release/fmess.exe out/fmess.exe
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fmess-windows-${{ github.event.pull_request.number && format('pr{0}', github.event.pull_request.number) || github.ref_name }}
+          path: out/
+          retention-days: 14

@@ -1,0 +1,1554 @@
+/* fMess theme
+   name: Teams
+   preview: #ebebeb #ebebeb #ffffff #e8ebfa #f5f5f5
+*/
+
+/* Teams' colours (Fluent UI v9, teamsLightTheme / teamsDarkTheme as Teams
+   itself builds them; spec/tokens.md), light and, while Messenger is dark,
+   dark. Every rule below uses only these. */
+:root {
+  --tm-window: #ebebeb;
+  --tm-card: #ffffff;
+  --tm-fg1: #242424;
+  --tm-fg2: #424242;
+  --tm-fg3: #616161;
+  --tm-rail-icon: #242424;
+  --tm-brand: #5b5fc7;
+  --tm-brand-fg2: #4f52b2;
+  --tm-brand-icon: #5b5fc7;
+  --tm-brand-pressed: #444791;
+  --tm-link: #4f52b2;
+  --tm-on-brand: #ffffff;
+  --tm-stroke1: #d1d1d1;
+  --tm-stroke1-hover: #c7c7c7;
+  --tm-stroke2: #e0e0e0;
+  --tm-stroke3: #f0f0f0;
+  --tm-stroke-subtle: #e0e0e0;
+  --tm-stroke-alpha: rgba(0, 0, 0, 0.05);
+  --tm-bg1-hover: #f5f5f5;
+  --tm-bg1-pressed: #e0e0e0;
+  --tm-bg2: #fafafa;
+  --tm-bg3: #f5f5f5;
+  --tm-bg3-hover: #ebebeb;
+  --tm-bg4: #f0f0f0;
+  --tm-bg6: #e6e6e6;
+  --tm-selected: #ffffff;
+  --tm-row-hover: rgba(255, 255, 255, 0.7);
+  --tm-row-pressed: rgba(255, 255, 255, 0.5);
+  --tm-search: rgba(255, 255, 255, 0.8);
+  --tm-bubble-in: #f5f5f5;
+  --tm-bubble-out: #e8ebfa;
+  --tm-bubble-out-text: #242424;
+  --tm-quote: rgba(0, 0, 0, 0.05);
+  --tm-pill-on: #5b5fc7;
+  --tm-pill-on-line: #5b5fc7;
+  --tm-pill-on-hover: #444791;
+  --tm-composer-line: #e0e0e0;
+  --tm-composer-sep: #d1d1d1;
+  --tm-focus-line: #5b5fc7;
+  --tm-hover: rgba(0, 0, 0, 0.04);
+  --tm-scroll: rgba(0, 0, 0, 0.5);
+  --tm-badge: #d13438;
+  --tm-focus: #000000;
+  --tm-ambient: rgba(0, 0, 0, 0.12);
+  --tm-key: rgba(0, 0, 0, 0.14);
+  --tm-shadow2: 0 0 2px var(--tm-ambient), 0 1px 2px var(--tm-key);
+  --tm-shadow8: 0 0 2px var(--tm-ambient), 0 4px 8px var(--tm-key);
+  --tm-shadow16: 0 0 2px var(--tm-ambient), 0 8px 16px var(--tm-key);
+  --tm-presence: {{svg:presence-available-10-filled:#13a10e}};
+  --tm-eye: {{svg:eye-filled:#5b5fc7}};
+  --tm-gradient: linear-gradient(to top left, #5c55e0 5%, #6a6ae6 17%, #7882f0 49%, #a392f7 90%);
+  --tm-hover-pill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' rx='4' fill='white' fill-opacity='.7'/%3E%3C/svg%3E");
+  --tm-quote-bar: #c7c7c7;
+}
+html[data-fmess-dark] {
+  --tm-window: #0a0a0a;
+  --tm-card: #292929;
+  --tm-fg1: #ffffff;
+  --tm-fg2: #d6d6d6;
+  --tm-fg3: #adadad;
+  --tm-rail-icon: #ffffff;
+  --tm-brand: #4f52b2;
+  --tm-brand-fg2: #aab1fa;
+  --tm-brand-icon: #7f85f5;
+  --tm-brand-pressed: #b6bcfa;
+  --tm-link: #7f85f5;
+  --tm-on-brand: #ffffff;
+  --tm-stroke1: #666666;
+  --tm-stroke1-hover: #757575;
+  --tm-stroke2: #525252;
+  --tm-stroke3: #3d3d3d;
+  --tm-stroke-subtle: #0a0a0a;
+  --tm-stroke-alpha: rgba(255, 255, 255, 0.1);
+  --tm-bg1-hover: #3d3d3d;
+  --tm-bg1-pressed: #1f1f1f;
+  --tm-bg2: #242424;
+  --tm-bg3: #1f1f1f;
+  --tm-bg3-hover: #333333;
+  --tm-bg4: #141414;
+  --tm-bg6: #333333;
+  --tm-selected: #242424;
+  --tm-row-hover: rgba(36, 36, 36, 0.8);
+  --tm-row-pressed: rgba(36, 36, 36, 0.5);
+  --tm-search: rgba(31, 31, 31, 0.7);
+  --tm-bubble-in: #1f1f1f;
+  --tm-bubble-out: #2b2b40;
+  --tm-bubble-out-text: #ffffff;
+  --tm-quote: rgba(255, 255, 255, 0.08);
+  --tm-pill-on: #4f52b2;
+  --tm-pill-on-line: #7f85f5;
+  --tm-pill-on-hover: #b6bcfa;
+  --tm-composer-line: #525252;
+  /* UNMEASURED: Teams hard-codes the light separator (#d1d1d1); the dark one is colorNeutralStroke1. */
+  --tm-composer-sep: #666666;
+  --tm-focus-line: #7f85f5;
+  --tm-hover: rgba(255, 255, 255, 0.09);
+  --tm-scroll: rgba(255, 255, 255, 0.4);
+  --tm-focus: #ffffff;
+  --tm-ambient: rgba(0, 0, 0, 0.24);
+  --tm-key: rgba(0, 0, 0, 0.28);
+  --tm-presence: {{svg:presence-available-10-filled:#3db838}};
+  /* UNMEASURED in dark: Teams' quote bar is #c7c7c7 (colorNeutralStroke1Hover) in light. */
+  --tm-quote-bar: #757575;
+  --tm-hover-pill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' rx='4' fill='%23242424' fill-opacity='.8'/%3E%3C/svg%3E");
+  --tm-eye: {{svg:eye-filled:#7f85f5}};
+}
+
+/* Messenger's own colours, in Teams'. */
+:root,
+.__fb-dark-mode,
+.__fb-light-mode,
+[style*="--chat-outgoing-message-bubble-background-color"] {
+  --accent: var(--tm-brand-icon) !important;
+  --primary-button-background: var(--tm-brand) !important;
+  --primary-button-text: var(--tm-on-brand) !important;
+  --primary-deemphasized-button-background: var(--tm-bubble-out) !important;
+  --primary-deemphasized-button-text: var(--tm-brand-fg2) !important;
+  --text-highlight: rgba(91, 95, 199, 0.3) !important;
+  --primary-text: var(--tm-fg1) !important;
+  --primary-icon: var(--tm-fg2) !important;
+  --secondary-text: var(--tm-fg3) !important;
+  --secondary-icon: var(--tm-fg3) !important;
+  --placeholder-text: var(--tm-fg3) !important;
+  --placeholder-icon: var(--tm-fg3) !important;
+  --blue-link: var(--tm-link) !important;
+  --divider: var(--tm-stroke-alpha) !important;
+  --web-wash: var(--tm-window) !important;
+  --surface-background: var(--tm-card) !important;
+  --card-background: var(--tm-card) !important;
+  --messenger-card-background: var(--tm-card) !important;
+  --comment-background: var(--tm-bg3) !important;
+  --input-background: var(--tm-bg3) !important;
+  --secondary-button-background: transparent !important;
+  --hover-overlay: var(--tm-hover) !important;
+  --popover-background: var(--tm-card) !important;
+  --notification-badge: var(--tm-badge) !important;
+  /* Keyboard focus: Fluent's 2px ring (colorStrokeFocus2), not Facebook's blue. */
+  --focus-ring-blue: var(--tm-focus) !important;
+  --focus-ring-shadow-default: 0 0 0 2px var(--tm-focus) !important;
+  --focus-ring-shadow-inset: 0 0 0 2px var(--tm-focus) inset !important;
+  --focus-ring-outline-link: 2px solid var(--tm-focus) !important;
+  --progress-ring-blue-foreground: var(--tm-brand-icon) !important;
+  --progress-ring-blue-background: rgba(91, 95, 199, 0.2) !important;
+
+  --chat-bubble-border-radius: 12px !important;
+  --chat-bubble-padding-vertical: 9px !important;
+  --chat-bubble-padding-horizontal: 13px !important;
+  --chat-outgoing-message-bubble-background-color: var(--tm-bubble-out) !important;
+  --chat-outgoing-message-background-gradient: initial !important;
+  --chat-outgoing-message-text-color: var(--tm-bubble-out-text) !important;
+  --chat-incoming-message-bubble-background-color: var(--tm-bubble-in) !important;
+  --chat-message-text-color: var(--tm-bubble-out-text) !important;
+  --chat-incoming-message-text-color: var(--tm-fg1) !important;
+  --chat-admin-text-color: var(--tm-fg3) !important;
+  --chat-replied-message-background-color: var(--tm-quote) !important;
+  --chat-composer-background-color: transparent !important;
+  --chat-composer-input-background-color: transparent !important;
+  --chat-composer-button-color: var(--tm-fg2) !important;
+  --chat-composer-caret-color: var(--tm-fg1) !important;
+  --chat-edit-message-overlay-color: var(--tm-bg3) !important;
+  --chat-scrollbar-thumb-color: var(--tm-scroll) !important;
+  --mwp-primary-theme-color: var(--tm-brand-icon) !important;
+  --mwp-header-background-color: var(--tm-card) !important;
+  --mwp-header-button-color: var(--tm-fg2) !important;
+  --mwp-header-text-color: var(--tm-fg1) !important;
+  --mwp-subheader-text-color: var(--tm-fg3) !important;
+  --mwp-message-row-background: transparent !important;
+  --reaction-pill-background-color: var(--tm-card) !important;
+  --reaction-pill-multireact-selected-color: var(--tm-bubble-out) !important;
+}
+
+/* Teams' own font stack (Segoe UI on Windows, SF on a Mac); nothing bundled. */
+html,
+html body,
+html :is(div, span, a, h1, h2, h3, h4, input, textarea, button, label, p) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif !important;
+}
+
+/* The window: Teams' grey behind everything. */
+html[data-fmess-chats],
+html[data-fmess-chats] body,
+html[data-fmess-chats] :has(> [data-fmess-list]) {
+  background: var(--tm-window) !important;
+}
+
+/* Teams' title bar: a 48px band over the whole window (the window buttons
+   stay where the system puts them), Messenger's search field centred in it,
+   "…" (fMess's Settings) and your picture at the right. Messenger's page
+   starts under the band (--header-height). Outside the chats only the strip
+   under the window buttons is coloured (0 where the system draws the title
+   bar). */
+:root {
+  --tm-band: 48px;
+  --tm-rail: 68px;
+  --tm-search-w: min(468px, calc(100vw - 254px));
+}
+html[data-fmess-chats],
+html[data-fmess-chats] * {
+  --header-height: var(--tm-band) !important;
+}
+html::before {
+  content: "";
+  position: fixed;
+  z-index: 2147483000;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--fmess-title-bar, 0px);
+  background: var(--tm-window);
+  pointer-events: none;
+}
+/* In the chats the band sits at the bottom of the page's stack, so the
+   search field (inside the list's own stacking context) shows over it. */
+html[data-fmess-chats]::before {
+  z-index: 0;
+  height: var(--tm-band);
+  background:
+    var(--tm-hover-pill) var(--fmess-window-hover-left, -999px) var(--fmess-window-hover-top, -999px) / 32px 32px no-repeat,
+    var(--tm-window);
+}
+html[data-fmess-chats]:not([data-fmess-media]) {
+  --fmess-window-buttons: settings -53 8 32, account -12 8 32, sidebar 108 8 32;
+}
+/* "…" and your picture with Teams' "available" dot, in one masked layer. */
+html[data-fmess-chats] body::before {
+  content: "";
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--tm-band);
+  pointer-events: none;
+  background:
+    var(--tm-presence) right 14px top 28px / 10px 10px no-repeat,
+    radial-gradient(closest-side, var(--tm-card) 92%, transparent 100%) right 13px top 27px / 12px 12px no-repeat,
+    var(--fmess-avatar, linear-gradient(var(--tm-bg6), var(--tm-bg6))) right 14px top 10px / 28px 28px no-repeat,
+    linear-gradient(var(--tm-brand-icon), var(--tm-brand-icon)) calc(var(--fmess-window-hover-left, -999px) + 6px) calc(var(--fmess-window-hover-top, -999px) + 6px) / 20px 20px no-repeat,
+    var(--tm-fg3);
+  -webkit-mask:
+    {{icon:more-horizontal-20-regular}} right 59px top 14px / 20px 20px no-repeat,
+    radial-gradient(circle 14px at calc(100% - 28px) 24px, #000 96%, transparent 100%),
+    radial-gradient(circle 6px at calc(100% - 19px) 33px, #000 96%, transparent 100%);
+}
+/* Teams' sidebar button in the band, right of the window buttons: it folds
+   the app bar away and back (fMess's "sidebar" window button). */
+html[data-fmess-chats] body::after {
+  content: "";
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 160px;
+  height: var(--tm-band);
+  pointer-events: none;
+  background:
+    linear-gradient(var(--tm-brand-icon), var(--tm-brand-icon)) calc(var(--fmess-window-hover-left, -999px) + 6px) calc(var(--fmess-window-hover-top, -999px) + 6px) / 20px 20px no-repeat,
+    var(--tm-fg3);
+  -webkit-mask: {{icon:panel-left-text-20-filled}} 114px 14px / 20px 20px no-repeat;
+}
+html[data-fmess-chats][data-fmess-sidebar-collapsed] body::after {
+  -webkit-mask-image: {{icon:panel-left-text-20-regular}};
+}
+/* The strip fMess drags the window by (macOS) covers the whole band, with
+   a hole for the search field; "…" and the picture take their own clicks. */
+html[data-fmess-chats]:not([data-fmess-media]) [data-tauri-drag-region] {
+  height: var(--tm-band) !important;
+  clip-path: polygon(evenodd,
+    0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    calc(50% + var(--tm-rail) / 2 - var(--tm-search-w) / 2) 8px, calc(50% + var(--tm-rail) / 2 + var(--tm-search-w) / 2) 8px,
+    calc(50% + var(--tm-rail) / 2 + var(--tm-search-w) / 2) 40px, calc(50% + var(--tm-rail) / 2 - var(--tm-search-w) / 2) 40px,
+    calc(50% + var(--tm-rail) / 2 - var(--tm-search-w) / 2) 8px);
+}
+
+/* The app bar down the left (68px), under the band, with Teams' apps as
+   pictures only: Chat filled with Teams' gradient, the others outlined. */
+html[data-fmess-chats] [data-fmess-list] {
+  position: relative !important;
+  box-sizing: border-box !important;
+  padding-left: 68px !important;
+  min-width: 348px !important;
+  background: var(--tm-window) !important;
+  --messenger-card-background: transparent !important;
+  --surface-background: transparent !important;
+}
+html[data-fmess-chats] [data-fmess-list],
+html[data-fmess-chats] [data-fmess-list] > div:not(.fmess-pane-edge) {
+  border-right: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Teams' logo heads the bar, centred over the apps as in Teams (its title
+   bar row holds the window buttons here), then the apps 44px apart, in
+   Teams' order: Chat, Meet, People, Copilot (its own colour picture),
+   Communities, Calendar, Activity. Under the pointer the slot turns white
+   (#242424 in dark), the icon filled in Teams' gradient, and Teams' white
+   tooltip names it. They are --fmess-buttons that do nothing; fMess marks
+   the lit one (data-fmess-hover). Chat, the open app, keeps its slot clear. */
+html[data-fmess-chats] [data-fmess-list] {
+  --fmess-buttons: chat 12 46 44, meet 12 90 44, people 12 134 44, copilot 12 178 44, communities 12 222 44, calendar 12 266 44, activity 12 310 44;
+  background:
+    linear-gradient(var(--tm-selected), var(--tm-selected)) 0 var(--fmess-hover-top, -300px) / 68px 44px no-repeat,
+    var(--tm-window) !important;
+}
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="chat"] {
+  background: var(--tm-window) !important;
+}
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover]::before {
+  content: var(--tm-app-name, "");
+  position: absolute;
+  z-index: 6;
+  left: 72px;
+  top: calc(var(--fmess-hover-top, -300px) + 8px);
+  box-sizing: border-box;
+  height: 28px;
+  padding: 5px 12px 7px;
+  border-radius: 4px;
+  background: var(--tm-card);
+  color: var(--tm-fg1);
+  font: 400 12px/16px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  white-space: nowrap;
+  filter: drop-shadow(0 0 2px var(--tm-ambient)) drop-shadow(0 4px 8px var(--tm-key));
+  pointer-events: none;
+}
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="chat"] { --tm-app-name: "Chat"; }
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="meet"] { --tm-app-name: "Meet"; }
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="people"] { --tm-app-name: "People"; }
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="copilot"] { --tm-app-name: "Copilot"; }
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="communities"] { --tm-app-name: "Communities"; }
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="calendar"] { --tm-app-name: "Calendar"; }
+html[data-fmess-chats] [data-fmess-list][data-fmess-hover="activity"] { --tm-app-name: "Activity"; }
+/* One masked layer: the logo and Copilot (their own pictures), the outlined
+   icons, and the filled ones (a strip, one per slot) clipped to the content
+   box, which the padding makes the slot under the pointer (none when none). */
+html[data-fmess-chats] [data-fmess-list]::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  top: 0;
+  width: 68px;
+  height: 360px;
+  box-sizing: border-box;
+  padding: max(0px, calc(var(--fmess-hover-top, -300px) + 10px)) 22px max(0px, calc(326px - var(--fmess-hover-top, -300px)));
+  pointer-events: none;
+  background:
+    {{svgfile:assets/teams-logo.svg}} 24px 12px / 20px 20px no-repeat,
+    {{png:assets/copilot.png}} 22px 188px / 24px 24px no-repeat,
+    var(--tm-gradient) 22px 56px / 24px 24px no-repeat,
+    var(--tm-gradient) 22px calc(var(--fmess-hover-top, -300px) + 10px) / 24px 24px no-repeat,
+    var(--tm-rail-icon);
+  -webkit-mask:
+    {{svgfile:assets/teams-logo.svg}} 24px 12px / 20px 20px no-repeat,
+    {{png:assets/copilot.png}} 22px 188px / 24px 24px no-repeat,
+    {{icon:chat-24-filled}} 22px 56px / 24px 24px no-repeat,
+    {{icon:video-24-regular}} 22px 100px / 24px 24px no-repeat,
+    {{icon:book-contacts-24-regular}} 22px 144px / 24px 24px no-repeat,
+    {{icon:people-team-24-regular}} 22px 232px / 24px 24px no-repeat,
+    {{icon:calendar-24-regular}} 22px 276px / 24px 24px no-repeat,
+    {{icon:alert-24-regular}} 22px 320px / 24px 24px no-repeat,
+    {{stack:44:chat-24-filled,video-24-filled,book-contacts-24-filled,_,people-team-24-filled,calendar-24-filled,alert-24-filled}} 22px 56px / 24px 288px no-repeat;
+  -webkit-mask-origin: border-box;
+  -webkit-mask-clip: border-box, border-box, border-box, border-box, border-box, border-box, border-box, border-box, content-box;
+}
+/* Folded (Teams' sidebar button in the band): the app bar goes, as in
+   Teams: no rail, logo, icons, tooltips or buttons there; the chat list
+   starts at the window's edge, and the search box centres on the window. */
+html[data-fmess-chats][data-fmess-sidebar-collapsed] {
+  --tm-rail: 0px;
+}
+html[data-fmess-chats][data-fmess-sidebar-collapsed] [data-fmess-list] {
+  padding-left: 0 !important;
+  min-width: 280px !important;
+  background: var(--tm-window) !important;
+  --fmess-buttons: none;
+}
+html[data-fmess-chats][data-fmess-sidebar-collapsed] [data-fmess-list]::before,
+html[data-fmess-chats][data-fmess-sidebar-collapsed] [data-fmess-list]::after {
+  display: none !important;
+}
+/* Unread chats: Teams' count on the Chat app. UNMEASURED: no badge was on
+   screen in Teams; Fluent's CounterBadge in danger red. */
+html[data-fmess-chats][data-fmess-unread]::after {
+  content: attr(data-fmess-unread);
+  position: fixed;
+  z-index: 2147483000;
+  left: 36px;
+  top: calc(var(--tm-band) + 52px);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--tm-badge);
+  color: #ffffff;
+  font: 600 10px/16px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+html[data-fmess-chats][data-fmess-sidebar-collapsed][data-fmess-unread]::after {
+  display: none !important;
+}
+/* No band, bar or badge over the photo viewer, which has a title bar of
+   its own; and no grey window showing at its edge. */
+html[data-fmess-media]::before,
+html[data-fmess-media]::after,
+html[data-fmess-media] body::before,
+html[data-fmess-media] body::after {
+  display: none !important;
+}
+html[data-fmess-chats][data-fmess-media],
+html[data-fmess-chats][data-fmess-media] body {
+  background: #000000 !important;
+}
+
+/* Chat list, as Teams' cluster: the "Chat" title row with its icons, a
+   line, the filter pills, a line, then the chats. */
+html[data-fmess-chats] #fmess-account {
+  display: none !important;
+}
+/* The title row: 60px and a line (Teams' 61), the title 32px in. */
+html[data-fmess-chats] [data-fmess-list] div:has(> div > div > #fmess-account) {
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: content-box !important;
+  height: 60px !important;
+  margin: 0 !important;
+  padding: 0 16px 0 32px !important;
+  border-bottom: 1px solid var(--tm-stroke-subtle) !important;
+}
+html[data-fmess-chats] [data-fmess-list] div:has(> div > div > #fmess-account) > div,
+html[data-fmess-chats] [data-fmess-list] div:has(> #fmess-account) {
+  flex: 1 1 auto !important;
+  padding: 0 !important;
+}
+html[data-fmess-chats] [data-fmess-list] h1 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 22px !important;
+  color: var(--tm-fg1) !important;
+}
+/* Teams says "Chat"; written only over an English Facebook, Messenger's
+   own (translated) title otherwise. */
+html[data-fmess-chats][lang^="en"] [data-fmess-list] h1 {
+  font-size: 0 !important;
+}
+html[data-fmess-chats][lang^="en"] [data-fmess-list] h1::after {
+  content: "Chat";
+  font: 700 18px/22px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: var(--tm-fg1);
+}
+/* Its icons: 32px buttons side by side, 16px from the edge. */
+html[data-fmess-chats] [data-fmess-list] div:has(> div > span > [data-fmess-ui="list-menu"]) {
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html[data-fmess-chats] [data-fmess-list] div:has(> span > :is([data-fmess-ui="list-menu"], a[href="/messages/new/"])) {
+  width: 32px !important;
+  height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html[data-fmess-chats] [data-fmess-list] :is([data-fmess-ui="list-menu"], a[href="/messages/new/"]) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  --secondary-button-background: transparent !important;
+  --hover-overlay: transparent !important;
+}
+html[data-fmess-chats] [data-fmess-list] :is([data-fmess-ui="list-menu"], a[href="/messages/new/"]):active {
+  background: var(--tm-bg1-pressed) !important;
+}
+html[data-fmess-chats] [data-fmess-list] :is([data-fmess-ui="list-menu"], a[href="/messages/new/"]) svg {
+  width: 20px !important;
+  height: 20px !important;
+  background: var(--tm-fg2);
+}
+html[data-fmess-chats] [data-fmess-list] :is([data-fmess-ui="list-menu"], a[href="/messages/new/"]) svg * {
+  visibility: hidden;
+}
+html[data-fmess-chats] [data-fmess-list] :is([data-fmess-ui="list-menu"], a[href="/messages/new/"]):hover svg {
+  background: var(--tm-fg1);
+}
+html[data-fmess-chats] [data-fmess-list] [data-fmess-ui="list-menu"] svg {
+  -webkit-mask: {{icon:more-horizontal-20-regular}} center / 20px 20px no-repeat;
+}
+html[data-fmess-chats] [data-fmess-list] [data-fmess-ui="list-menu"]:hover svg {
+  -webkit-mask-image: {{icon:more-horizontal-20-filled}};
+}
+html[data-fmess-chats] [data-fmess-list] a[href="/messages/new/"] svg {
+  -webkit-mask: {{icon:compose-20-regular}} center / 20px 20px no-repeat;
+}
+html[data-fmess-chats] [data-fmess-list] a[href="/messages/new/"]:hover svg {
+  -webkit-mask-image: {{icon:compose-20-filled}};
+}
+
+/* Search: Teams' box in the band is fMess's own (#fmess-search-box, asked
+   for with --fmess-search-box): it carries Messenger's placeholder and
+   focuses Messenger's field, as ⌘K does. That field stays in the list,
+   folded away until it is used; while searching it shows at the top of the
+   list, with the results under it. */
+html[data-fmess-chats]:not([data-fmess-media]) {
+  --fmess-search-box: 1;
+}
+#fmess-search-box {
+  position: fixed;
+  z-index: 2147483000;
+  top: 8px;
+  left: calc(50vw + var(--tm-rail) / 2 - var(--tm-search-w) / 2);
+  width: var(--tm-search-w);
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 12px 0 51px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--tm-search);
+  outline: 1px solid var(--tm-stroke-alpha);
+  outline-offset: -1px;
+  color: var(--tm-fg2);
+  font: 400 14px/32px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: text;
+  -webkit-user-select: none;
+}
+#fmess-search-box:hover {
+  background: var(--tm-card);
+}
+#fmess-search-box:focus-visible {
+  outline: 2px solid var(--tm-brand);
+  outline-offset: -2px;
+}
+#fmess-search-box::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 6px;
+  width: 20px;
+  height: 20px;
+  background: var(--tm-fg2);
+  -webkit-mask: {{icon:search-20-regular}} center / 20px 20px no-repeat;
+}
+/* Teams' word for it over an English Facebook ("Search Messenger" there). */
+html[lang^="en"] #fmess-search-box {
+  font-size: 0;
+}
+html[lang^="en"] #fmess-search-box::after {
+  content: "Search";
+  font-size: 14px;
+}
+html[data-fmess-media] #fmess-search-box {
+  display: none;
+}
+/* Messenger's field (with its back button while searching) takes no room in
+   the list and can't be seen, but can take the focus; with it, it covers the
+   "Chat" title's row, and the results show under it. */
+html[data-fmess-chats] [data-fmess-list] > div > div > div:has(input[type="search"]) {
+  /* Over the title's row, which comes before it. */
+  z-index: 5 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+html[data-fmess-chats] [data-fmess-list] div:has(> label input[type="search"]):not(:focus-within) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+html[data-fmess-chats] [data-fmess-list] div:has(> label input[type="search"]):focus-within {
+  position: absolute !important;
+  z-index: 3 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: -61px !important;
+  height: 61px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  background: var(--tm-window) !important;
+}
+html[data-fmess-chats] [data-fmess-list] label:has(input[type="search"]):is(:hover, :focus-within) {
+  background: var(--tm-card) !important;
+}
+/* Focused, Teams' box only turns white: no ring. */
+html[data-fmess-chats] [data-fmess-list] label:has(input[type="search"]),
+html[data-fmess-chats] [data-fmess-list] label:has(input[type="search"]) * {
+  box-shadow: none !important;
+}
+html[data-fmess-chats] [data-fmess-list] label > span:has(> svg) {
+  flex: none !important;
+  justify-content: center !important;
+  width: 51px !important;
+  height: 32px !important;
+  padding: 0 2px 0 20px !important;
+  box-sizing: border-box !important;
+}
+html[data-fmess-chats] [data-fmess-list] label > span > svg {
+  width: 18px !important;
+  height: 20px !important;
+  background: var(--tm-fg2);
+  -webkit-mask: {{icon:search-20-regular}} center / 20px 20px no-repeat;
+}
+html[data-fmess-chats] [data-fmess-list] label > span > svg * {
+  visibility: hidden;
+}
+html[data-fmess-chats] [data-fmess-list] input[type="search"] {
+  height: 32px !important;
+  padding: 0 2px 0 9px !important;
+  font-size: 14px !important;
+  color: var(--tm-fg1) !important;
+}
+html[data-fmess-chats] [data-fmess-list] input[type="search"]::placeholder {
+  color: var(--tm-fg2) !important;
+}
+/* Teams' word for it over an English Facebook ("Search Messenger" there). */
+html[data-fmess-chats][lang^="en"] [data-fmess-list] input[type="search"]::placeholder {
+  color: transparent !important;
+}
+html[data-fmess-chats][lang^="en"] [data-fmess-list] label:has(input[type="search"]:placeholder-shown)::after {
+  content: "Search";
+  position: absolute;
+  left: 60px;
+  top: 0;
+  font: 400 14px/32px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: var(--tm-fg2);
+  pointer-events: none;
+}
+
+/* Filters: Teams' pills, one line. */
+html[data-fmess-chats] [data-fmess-list] [role="tablist"] {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  scrollbar-width: none;
+  gap: 4px !important;
+  height: auto !important;
+  align-items: center !important;
+  padding: 0 !important;
+}
+/* The pills' row: 8px above and below, a line (Teams' 41px), the pills
+   32px in, under the title; the chats start 6px under the line, as Teams'
+   first section does. */
+html[data-fmess-chats] [data-fmess-list] div:has(> div > div > [role="tablist"]) {
+  margin: 0 0 6px !important;
+  padding: 8px 0 8px 32px !important;
+  border-bottom: 1px solid var(--tm-stroke-subtle) !important;
+}
+html[data-fmess-chats] [data-fmess-list] div:has(> div > [role="tablist"]),
+html[data-fmess-chats] [data-fmess-list] div:has(> [role="tablist"]),
+html[data-fmess-chats] [data-fmess-list] [role="tablist"] {
+  height: 24px !important;
+  min-height: 0 !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tablist"]::-webkit-scrollbar {
+  display: none;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tablist"] > * {
+  flex: none !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tablist"] > :not(:has([role="tab"])) {
+  display: none !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tab"] {
+  height: 24px !important;
+  margin: 0 !important;
+  padding: 0 8px !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--tm-stroke1) !important;
+  border-radius: 10000px !important;
+  background: transparent !important;
+  --primary-deemphasized-button-text: var(--tm-fg2) !important;
+  --primary-text: var(--tm-fg2) !important;
+  --secondary-text: var(--tm-fg2) !important;
+  --hover-overlay: transparent !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tab"]:hover {
+  border-color: var(--tm-stroke1-hover) !important;
+  background: var(--tm-bg3-hover) !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tab"][aria-selected="true"] {
+  border-color: var(--tm-pill-on-line) !important;
+  background: var(--tm-pill-on) !important;
+  --primary-deemphasized-button-text: var(--tm-on-brand) !important;
+  --primary-text: var(--tm-on-brand) !important;
+  --secondary-text: var(--tm-on-brand) !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tab"][aria-selected="true"]:hover {
+  border-color: var(--tm-pill-on-hover) !important;
+  background: var(--tm-pill-on-hover) !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="tab"] span {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 16px !important;
+}
+
+/* Rows: 52px, 36px pictures, square-ish corners; the open chat white. */
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"] {
+  border-radius: 4px !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] {
+  padding-inline: 16px !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"] > div {
+  min-height: 52px !important;
+  margin: 0 !important;
+  --x-paddingBlock: 8px !important;
+  --x-paddingInline: 16px !important;
+  padding: 8px 12px 8px 16px !important;
+}
+/* The picture, 56px in Messenger, at Teams' 36 (with its dots and badges). */
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"] > div > div > div:first-child {
+  flex: none !important;
+  width: 36px !important;
+  height: 36px !important;
+  margin-right: 12px !important;
+  padding: 0 !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"] > div > div > div:first-child > div {
+  zoom: 0.642857;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"] > div > div > div:nth-child(2) > div {
+  padding: 0 !important;
+}
+/* Names 14px, the last message 12px; a read chat all grey, an unread one
+   dark and bold, the open one dark (Teams). Read rows are the ones without
+   Messenger's unread dot (a button); their names lose Messenger's weight. */
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"] {
+  --tm-row: 1;
+  /* Messenger's own hover layer covered part of the row only, in another
+     shade: the row's fill is the theme's alone. */
+  --hover-overlay: transparent !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"]:not(:has([role="button"])) {
+  --primary-text: var(--tm-fg3) !important;
+  --tm-read: 1;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"]:hover {
+  --primary-text: var(--tm-fg2) !important;
+  --secondary-text: var(--tm-fg2) !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"][aria-current="page"] {
+  --primary-text: var(--tm-fg1) !important;
+  --secondary-text: var(--tm-fg1) !important;
+}
+@container style(--tm-row: 1) {
+  span[dir="auto"] {
+    font-size: 12px !important;
+    line-height: 16px !important;
+  }
+  div > span[dir="auto"]:first-child,
+  div > span[dir="auto"]:first-child span {
+    font-size: 14px !important;
+    line-height: 20px !important;
+  }
+  div[style*="height: 8px"] {
+    height: 4px !important;
+  }
+  /* The time on the name's line, at the right, as in Teams; the " · "
+     before it goes. Names leave it room. */
+  div:has(> div[style*="height: 8px"]) {
+    position: relative !important;
+  }
+  div[style*="height: 8px"] + div > span:last-child:has(abbr) {
+    position: absolute !important;
+    top: 2px !important;
+    right: 0 !important;
+    padding: 0 !important;
+  }
+  div[style*="height: 8px"] + div > span:has(+ span:last-child abbr) {
+    display: none !important;
+  }
+  div > span[dir="auto"]:first-child {
+    padding-right: 40px !important;
+    box-sizing: border-box !important;
+  }
+}
+/* Hovered, Teams shows the row's "…" where the time was; so does Messenger. */
+/* (Its own name: --tm-row-hover is the hover colour, which this flag
+   replaced inside the row, leaving the hovered row without its fill.) */
+html[data-fmess-chats] [data-fmess-list] [role="row"]:hover {
+  --tm-row-hovered: 1;
+}
+@container style(--tm-row-hovered: 1) {
+  span:has(> span > span > span > abbr) {
+    visibility: hidden !important;
+  }
+  /* The row's right-hand marks (the "seen by" pictures, the unread dot):
+     the third box of the row's line and after. The "…" takes their place. */
+  a[role="link"] > div > div > div:nth-child(n + 3) {
+    visibility: hidden !important;
+  }
+}
+@container style(--tm-read: 1) {
+  span[dir="auto"],
+  span[dir="auto"] span {
+    font-weight: 400 !important;
+  }
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"]:hover {
+  background: var(--tm-row-hover) !important;
+  box-shadow: 0 0 0 1px var(--tm-stroke-alpha) !important;
+}
+/* In dark, Teams' hovered row has no outline. */
+html[data-fmess-dark][data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"]:hover {
+  box-shadow: none !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[role="link"]:active {
+  background: var(--tm-row-pressed) !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[aria-current="page"],
+html[data-fmess-chats] [data-fmess-list] [role="row"] a[aria-current="page"]:hover {
+  background: var(--tm-selected) !important;
+  box-shadow: none !important;
+}
+
+/* The row's "…" (Messenger's menu for the chat): Teams' flat icon, without
+   Messenger's white circle. */
+html[data-fmess-chats] [data-fmess-list] [role="row"] [role="button"][aria-haspopup="menu"] {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] [role="button"][aria-haspopup="menu"] svg {
+  width: 20px !important;
+  height: 20px !important;
+  background: var(--tm-fg2);
+  -webkit-mask: {{icon:more-horizontal-20-regular}} center / 20px 20px no-repeat;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] [role="button"][aria-haspopup="menu"] svg * {
+  visibility: hidden;
+}
+html[data-fmess-chats] [data-fmess-list] [role="row"] [role="button"][aria-haspopup="menu"]:hover svg {
+  background: var(--tm-fg1);
+  -webkit-mask-image: {{icon:more-horizontal-20-filled}};
+}
+
+/* The chat: a white card with Teams' corners and shadow, 8px from the
+   window's edges (and from the top where there is no strip). */
+html[data-fmess-chats] [role="main"] {
+  margin: max(0px, calc(8px - var(--fmess-title-bar, 0px))) 8px 8px 0 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: var(--tm-shadow8) !important;
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-mw-file-dropzone] {
+  background: var(--tm-card) !important;
+  --messenger-card-background: transparent !important;
+}
+html[data-fmess-chats] [role="main"] [data-mw-file-dropzone] [style*="background-image"]:has([role="log"]) {
+  background: transparent !important;
+}
+
+/* Header: the name in Teams' bold 20px, a hairline under it, the calls
+   as Teams' purple filled icons, then a divider and Teams' "more". */
+html[data-fmess-chats] [role="main"] [data-fmess-ui="chat-header"] {
+  background: var(--tm-card) !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--tm-stroke-alpha) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="chat-header"] a[role="link"] > div > div > div:first-child {
+  zoom: 0.8;
+  margin-left: 6px !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="chat-header"] :is(h1, h2, h3) span {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 28px !important;
+  color: var(--tm-fg1) !important;
+}
+html[data-fmess-chats] [role="main"] :is([data-fmess-ui="audio-call"], [data-fmess-ui="video-call"], [data-fmess-ui="info"]) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  --hover-overlay: transparent !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="info"] {
+  border-radius: 4px !important;
+}
+html[data-fmess-chats] [role="main"] :is([data-fmess-ui="audio-call"], [data-fmess-ui="video-call"]):hover {
+  background: var(--tm-bg1-hover) !important;
+}
+html[data-fmess-chats] [role="main"] :is([data-fmess-ui="audio-call"], [data-fmess-ui="video-call"], [data-fmess-ui="info"]) svg {
+  width: 20px !important;
+  height: 20px !important;
+  background: var(--tm-brand-icon);
+}
+html[data-fmess-chats] [role="main"] :is([data-fmess-ui="audio-call"], [data-fmess-ui="video-call"], [data-fmess-ui="info"]) svg * {
+  visibility: hidden;
+}
+html[data-fmess-chats] [role="main"] :is([data-fmess-ui="audio-call"], [data-fmess-ui="video-call"]):hover svg {
+  background: var(--tm-brand-pressed);
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="audio-call"] svg {
+  -webkit-mask: {{icon:call-20-filled}} center / 20px 20px no-repeat;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="video-call"] svg {
+  -webkit-mask: {{icon:video-20-filled}} center / 20px 20px no-repeat;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="info"] svg {
+  background: var(--tm-fg2);
+  -webkit-mask: {{icon:more-horizontal-20-regular}} center / 20px 20px no-repeat;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="info"]:is(:hover, [aria-expanded="true"]) svg {
+  background: var(--tm-brand-icon);
+  -webkit-mask-image: {{icon:more-horizontal-20-filled}};
+}
+/* Video before audio, as in Teams, and a divider before "more". */
+html[data-fmess-chats] [role="main"] [data-fmess-ui="chat-header"] div:has(> div > span > [data-fmess-ui="video-call"]) {
+  order: -1;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="info"]::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 4px;
+  width: 1px;
+  height: 24px;
+  background: var(--tm-stroke3);
+  pointer-events: none;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="info"] {
+  margin-left: 17px !important;
+}
+
+/* Messages: Teams' bubbles, type and gutters. */
+html[data-fmess-chats] [role="main"] [role="log"] {
+  padding-inline: 16px 20px !important;
+  box-sizing: border-box !important;
+}
+html[data-fmess-chats] [role="main"] [data-message-id] [role="presentation"] {
+  border-radius: 12px !important;
+}
+html[data-fmess-chats] [role="main"] [data-message-id] [dir="auto"] {
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+/* A quote in a message ("> …"): Messenger draws its bar and text white, for
+   its own dark bubbles; on Teams' light lavender they hardly showed. */
+html[data-fmess-chats] [role="main"] [data-message-id] blockquote {
+  --secondary-text-on-media: var(--tm-fg2) !important;
+  --chat-text-blockquote-color-text-primary-media: var(--tm-quote-bar) !important;
+}
+/* Someone typing: their picture and dots in line with the messages'
+   (Messenger sets them 8px further left). */
+html[data-fmess-chats] [role="main"] [role="log"] [aria-hidden="true"]:not([data-message-id] *):has(> div[role="presentation"] + div [role="presentation"]) > div[role="presentation"]:first-child {
+  padding-left: 14px !important;
+}
+/* The sender's name above a group's messages: Teams' small grey line. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] h4 span {
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 400 !important;
+  color: var(--tm-fg3) !important;
+}
+/* Dates: plain grey text, no lines, as in Teams. */
+html[data-fmess-chats] [role="main"] [data-scope="date_break"] > span > span {
+  color: var(--tm-fg3) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 16px !important;
+  background: transparent !important;
+}
+
+/* Composer: Teams' box (1px line, 6px corners, a brand line along the
+   bottom while typing), its tools on the right in Teams' order: emoji,
+   attach (or + while typing), a divider, send. Messenger's like button
+   would send a 👍 from an empty box, which Teams never does: in its place
+   Teams' send arrow, a picture only, until there is text to send. */
+html[data-fmess-chats] [role="main"] div:has(> [data-fmess-ui="composer"]) {
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="composer"] {
+  margin: 0 32px 24px !important;
+  min-height: 46px !important;
+  padding: 0 6px 0 0 !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  border: 1px solid var(--tm-composer-line) !important;
+  border-radius: 6px !important;
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="composer"]:focus-within {
+  box-shadow: inset 0 -4px 0 -2px var(--tm-focus-line) !important;
+}
+[data-fmess-ui="composer"] > div:has(+ div [role="textbox"]) {
+  display: contents !important;
+}
+[data-fmess-ui="composer"] > div:has([role="textbox"]) {
+  order: 1;
+  flex: 1 1 0 !important;
+}
+[data-fmess-ui="composer"] div:has(> span :is([data-fmess-ui="attach"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"])) {
+  order: 2;
+}
+[data-fmess-ui="composer"] div:has(> span [data-fmess-ui="voice-clip"]) {
+  order: 3;
+}
+[data-fmess-ui="composer"] div:has(> span [data-fmess-ui="more-actions"]) {
+  order: 3;
+}
+[data-fmess-ui="composer"] > span {
+  order: 4;
+  position: relative !important;
+  margin-left: 9px !important;
+}
+[data-fmess-ui="composer"] > span::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: calc(50% - 12px);
+  width: 1px;
+  height: 24px;
+  background: var(--tm-composer-sep);
+  pointer-events: none;
+}
+[data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  --hover-overlay: transparent !important;
+}
+[data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]) svg {
+  width: 16px !important;
+  height: 16px !important;
+  background: var(--tm-fg2);
+}
+[data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]) svg * {
+  visibility: hidden;
+}
+[data-fmess-ui="composer"] :is([data-fmess-ui="attach"], [data-fmess-ui="more-actions"], [data-fmess-ui="emoji"], [data-fmess-ui="send"], [data-fmess-ui="voice-clip"], [data-fmess-ui="sticker"], [data-fmess-ui="gif"]):hover svg {
+  background: var(--tm-brand-icon);
+}
+[data-fmess-ui="composer"] [data-fmess-ui="emoji"] svg { -webkit-mask: {{icon:ns-emoji-regular}} center / 16px 16px no-repeat; }
+[data-fmess-ui="composer"] [data-fmess-ui="emoji"]:hover svg { -webkit-mask-image: {{icon:ns-emoji-filled}}; }
+[data-fmess-ui="composer"] [data-fmess-ui="attach"] svg { -webkit-mask: {{icon:ns-paperclip-regular}} center / 16px 16px no-repeat; }
+[data-fmess-ui="composer"] [data-fmess-ui="attach"]:hover svg { -webkit-mask-image: {{icon:ns-paperclip-filled}}; }
+[data-fmess-ui="composer"] [data-fmess-ui="more-actions"] svg { -webkit-mask: {{icon:ns-add-regular}} center / 16px 16px no-repeat; }
+[data-fmess-ui="composer"] [data-fmess-ui="more-actions"]:hover svg { -webkit-mask-image: {{icon:ns-add-filled}}; }
+[data-fmess-ui="composer"] [data-fmess-ui="voice-clip"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16'%3E%3Cpath d='M10 2a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM8 5a2 2 0 1 1 4 0v5a2 2 0 1 1-4 0V5ZM5 9.5a.5.5 0 0 0-1 0 6 6 0 0 0 5.5 5.98V17.5a.5.5 0 0 0 1 0v-2.02A6 6 0 0 0 16 9.5a.5.5 0 0 0-1 0 5 5 0 0 1-10 0Z'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[data-fmess-ui="composer"] [data-fmess-ui="sticker"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16' fill='none' stroke='black' stroke-linejoin='round'%3E%3Cpath d='M5.5 3.5h9A2 2 0 0 1 16.5 5.5v5.2a2 2 0 0 1-.6 1.4l-3.8 3.8a2 2 0 0 1-1.4.6H5.5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z'/%3E%3Cpath d='M16.4 11.5H14a2 2 0 0 0-2 2v2.4'/%3E%3Cpath d='M7.2 8.2v.4M11.8 8.2v.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[data-fmess-ui="composer"] [data-fmess-ui="gif"] svg { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 16 16' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='14' height='11' rx='2'/%3E%3Cpath d='M8.2 8.6A1.6 1.6 0 1 0 8.2 11.4V10.5H7.3M10.2 8.4v3.2M12 11.6V8.4h2M12 10h1.5'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+[data-fmess-ui="composer"] [data-fmess-ui="send"] svg { background: var(--tm-brand-icon); -webkit-mask: {{icon:ns-send-regular}} center / 16px 16px no-repeat; }
+[data-fmess-ui="composer"] [data-fmess-ui="send"]:hover svg { -webkit-mask-image: {{icon:ns-send-filled}}; }
+/* The like button sends a 👍 (or the chat's emoji) when the box is empty;
+   Teams has none, and shows its send button greyed instead. */
+[data-fmess-ui="composer"] > span:has(> [data-fmess-ui="like"]) {
+  --tm-like: 1;
+  width: 32px !important;
+  height: 32px !important;
+  pointer-events: none !important;
+}
+@container style(--tm-like: 1) {
+  [role="button"] {
+    display: none !important;
+  }
+}
+[data-fmess-ui="composer"] > span:has(> [data-fmess-ui="like"])::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  background: var(--tm-fg2);
+  -webkit-mask: {{icon:ns-send-regular}} center / 16px 16px no-repeat;
+}
+[data-fmess-ui="composer"] > div:has([role="textbox"]) {
+  --tm-field: 1;
+}
+@container style(--tm-field: 1) {
+  div[style*="margin-left: 4px"] {
+    margin-left: 0 !important;
+  }
+  /* Teams' "Type a message" over an English Facebook, in Messenger's
+     placeholder (shown only while the box is empty), which follows the
+     message box; Messenger's own word in other languages. */
+  html[lang^="en"] [role="textbox"] + div[aria-hidden="true"] > div {
+    font-size: 0 !important;
+  }
+  html[lang^="en"] [role="textbox"] + div[aria-hidden="true"] > div::after {
+    content: "Type a message";
+    font-size: 14px;
+    line-height: 20px;
+    white-space: nowrap;
+  }
+}
+[data-fmess-ui="composer"] [role="textbox"] {
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+
+/* Editing a message: Teams' box again, with ✓ (save) in it after the emoji
+   button, in the brand colour once the text has changed; the bar above it
+   with the title and X (cancel), lined up with the box. */
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-composer"] {
+  align-items: stretch !important;
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-bar"] {
+  padding: 8px 32px 6px !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-bar"] h3 span {
+  color: var(--tm-fg1) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-box"] {
+  padding: 0 32px 24px !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-box"] > div {
+  min-height: 46px !important;
+  padding: 0 6px 0 0 !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  border: 1px solid var(--tm-composer-line) !important;
+  border-radius: 6px !important;
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="edit-box"] > div:focus-within {
+  box-shadow: inset 0 -4px 0 -2px var(--tm-focus-line) !important;
+}
+html[data-fmess-chats] [role="main"] :is(div:has(> [data-fmess-ui="edit-field"]), [data-fmess-ui="edit-field"]) {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  align-items: center !important;
+}
+[data-fmess-ui="edit-field"] [role="textbox"] {
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  --hover-overlay: transparent !important;
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) svg {
+  width: 16px !important;
+  height: 16px !important;
+  background: var(--tm-fg2);
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]) svg * {
+  visibility: hidden;
+}
+[role="main"] :is([data-fmess-ui="edit-cancel"], [data-fmess-ui="edit-emoji"], [data-fmess-ui="edit-done"]:not([aria-disabled="true"])):hover svg,
+[role="main"] [data-fmess-ui="edit-done"]:not([aria-disabled="true"]) svg {
+  background: var(--tm-brand-icon);
+}
+[role="main"] [data-fmess-ui="edit-cancel"] svg { -webkit-mask: {{icon:dismiss-20-regular}} center / 16px 16px no-repeat; }
+[role="main"] [data-fmess-ui="edit-cancel"]:hover svg { -webkit-mask-image: {{icon:dismiss-20-filled}}; }
+[role="main"] [data-fmess-ui="edit-emoji"] svg { -webkit-mask: {{icon:ns-emoji-regular}} center / 16px 16px no-repeat; }
+[role="main"] [data-fmess-ui="edit-emoji"]:hover svg { -webkit-mask-image: {{icon:ns-emoji-filled}}; }
+[role="main"] [data-fmess-ui="edit-done"] svg { -webkit-mask: {{icon:checkmark-20-regular}} center / 16px 16px no-repeat; }
+[role="main"] [data-fmess-ui="edit-done"][aria-disabled="true"] svg { opacity: 0.5; }
+
+/* Replying (or a link's preview): Teams puts the quote inside the message
+   box. The bar above the box and the box read as one bordered box, the bar
+   its top part, its content Teams' quote card: light grey, a grey bar on
+   the left, 4px corners, a faint shadow, the name line small and grey, the
+   quoted text dark, an X at the right. */
+html[data-fmess-chats] [role="main"] [data-fmess-ui="composer-bar"] {
+  margin: 0 32px !important;
+  padding: 12px 12px 4px !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--tm-composer-line) !important;
+  border-bottom: 0 !important;
+  border-radius: 6px 6px 0 0 !important;
+  background: var(--tm-card) !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="composer-bar"] + [data-fmess-ui="composer"] {
+  border-top: 0 !important;
+  border-radius: 0 0 6px 6px !important;
+}
+html[data-fmess-chats] [role="main"] [data-fmess-ui="composer-bar"] > div {
+  --tm-quote-card: 1;
+  align-items: flex-start !important;
+  width: fit-content !important;
+  min-width: 240px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 8px 8px 8px 18px !important;
+  border: 1px solid var(--tm-stroke3) !important;
+  border-radius: 4px !important;
+  background:
+    linear-gradient(var(--tm-quote-bar), var(--tm-quote-bar)) 3px 3px / 3px calc(100% - 6px) no-repeat,
+    var(--tm-bg2) !important;
+  box-shadow: var(--tm-shadow2) !important;
+}
+@container style(--tm-quote-card: 1) {
+  h3,
+  h3 span {
+    font-size: 12px !important;
+    line-height: 16px !important;
+    font-weight: 400 !important;
+    color: var(--tm-fg3) !important;
+  }
+  span:not(h3 span),
+  span:not(h3 span) div {
+    font-size: 14px !important;
+    line-height: 20px !important;
+    color: var(--tm-fg1) !important;
+  }
+  /* Messenger's 12px close button as Teams' 20px one with its thin X. */
+  [role="button"] {
+    flex: none !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin-left: 12px !important;
+    border-radius: 4px !important;
+    --hover-overlay: var(--tm-hover) !important;
+  }
+  [role="button"] svg {
+    width: 14px !important;
+    height: 14px !important;
+    margin: 3px !important;
+    background: var(--tm-fg2);
+    -webkit-mask: {{icon:dismiss-20-regular}} center / 14px 14px no-repeat;
+  }
+  [role="button"] svg * {
+    visibility: hidden;
+  }
+}
+
+/* A message's hover actions: one Teams card (white, 8px corners, shadow16)
+   above the message, at its right: Teams' four quick reactions (fMess adds
+   them, --fmess-quick-reactions), add-reaction, a divider, reply, more, in
+   Teams' icons. Messenger's buttons are found by their icons (react, reply,
+   more), in Teams' order. */
+html[data-fmess-chats] {
+  --fmess-quick-reactions: 1f44d 2764 1f606 1f62e;
+}
+/* Your messages are the rows whose first column is the read-receipt one
+   (an empty role=none), not a picture's; Messenger lays them out reversed. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] > [role="presentation"]:has(> [role="presentation"]:first-child > [role="presentation"] > [role="none"]) {
+  --tm-own: 1;
+}
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] [role="toolbar"] {
+  position: static !important;
+}
+/* The card hangs above the message, from the row (the actions' own column
+   is not positioned): theirs from the message's start (past the 50px of
+   pictures), yours ending where your messages end. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] > [role="presentation"] > [role="presentation"]:has(> [role="presentation"] > [role="toolbar"]) {
+  position: static !important;
+}
+/* Right above the message, as in Teams: the row is what the card hangs
+   from. Without a position of its own, the card hung from the group, above
+   the sender's name, some 30px off the message. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] > [role="presentation"]:has(> [role="presentation"] > [role="presentation"] > [role="toolbar"]) {
+  position: relative !important;
+}
+/* After a quick reaction the card goes, as Messenger's own actions do,
+   until the pointer leaves the message (fMess's data-fmess-reacted). Kept
+   in place, hidden: Messenger's picker is anchored to its react button. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"][data-fmess-reacted] [role="toolbar"] > [role="presentation"] > [role="presentation"] {
+  visibility: hidden !important;
+}
+html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"]) {
+  --tm-actions: 1;
+  position: absolute !important;
+  z-index: 2 !important;
+  top: -40px !important;
+  left: 50px !important;
+  right: auto !important;
+  flex-direction: row !important;
+  width: max-content !important;
+  max-width: none !important;
+  height: auto !important;
+  align-items: center !important;
+  padding: 4px !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: var(--tm-card) !important;
+  filter: drop-shadow(0 0 2px var(--tm-ambient)) drop-shadow(0 8px 16px var(--tm-key));
+  /* As in Teams, the card comes a moment after the pointer and fades in,
+     so passing over messages doesn't flash it. */
+  animation: tm-card-in 0.16s ease-out 0.4s both;
+}
+@keyframes tm-card-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+/* Messenger keeps a message's actions while its buttons have the focus
+   (after a reaction, say), which left Teams' big card standing on messages
+   the pointer had left: the card shows only on the message under the
+   pointer, while one of its menus is open, or while a key (Tab) has put the
+   focus on one of its buttons. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"]:not(:hover):not(:has([aria-expanded="true"], :focus-visible)) [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"]) {
+  display: none !important;
+}
+/* A bridge to the card: while a message shows its card, the strip the card
+   hangs in counts as that message, the whole chat wide (the card's own
+   ::before, under its buttons). Messenger gives the actions to whatever
+   message is under the pointer, and on the way up the pointer crossed the
+   one above beside the card (a sender's name, say, a row of its own), and
+   the card was gone before it was reached: on a tall message, whose card
+   is far from the pointer, nearly always. The card stacks above the
+   messages (z-index 2), so its bridge does too. */
+html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -1px;
+  height: 42px;
+  left: -50px;
+  width: 100vw;
+}
+@container style(--tm-own: 1) {
+  html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"])::before {
+    left: auto;
+    right: -8px;
+  }
+}
+/* The card hangs over the message above, and each message sits in a box of
+   its own stacking (position: relative; z-index: 0) that the message above
+   paints over, so the pointer reached that message instead of the card,
+   which it could see, and Messenger moved the actions there. While a
+   message has its card, its box comes first, as Teams' card does. */
+html[data-fmess-chats] [role="main"] [role="log"] div:has(> div > [role="none"] > [role="article"] [role="toolbar"] [role="button"]) {
+  z-index: 1 !important;
+}
+@container style(--tm-own: 1) {
+  html[data-fmess-chats] [role="main"] [role="toolbar"] > [role="presentation"] > [role="presentation"]:has([role="button"]) {
+    left: auto !important;
+    right: 8px !important;
+  }
+}
+@container style(--tm-actions: 1) {
+  .fmess-quick-reactions {
+    display: flex !important;
+    flex: none !important;
+    align-items: center !important;
+    order: 0;
+  }
+  .fmess-quick-reaction {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 4px !important;
+    font-size: 20px;
+    line-height: 24px;
+    cursor: pointer;
+  }
+  .fmess-quick-reaction img {
+    width: 24px !important;
+    height: 24px !important;
+    transition: transform 0.1s ease-out;
+  }
+  .fmess-quick-reaction:hover img {
+    transform: scale(1.15);
+  }
+  div:has(> span > div > [role="button"]),
+  span:has(> div > [role="button"]),
+  div:not(.fmess-quick-reactions):has(> [role="button"]) {
+    flex: none !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
+  div:has(> span path[d^="M111 203a9.5"]) { order: 1; }
+  div:has(> span path[d^="M101 936.5c"]) { order: 2; margin-left: 9px !important; position: relative !important; }
+  div:has(> span path[d^="M456 410a2"]) { order: 3; }
+  div:has(> span path[d^="M101 936.5c"])::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 5px;
+    width: 1px;
+    height: 22px;
+    background: var(--tm-stroke2);
+  }
+  [role="button"] {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 4px !important;
+    --hover-overlay: transparent !important;
+  }
+  [role="button"] svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  /* Teams' icons for the three buttons it has; any other (forward, on a
+     photo or a link) keeps Messenger's, in Teams' grey. */
+  [role="button"] {
+    --primary-icon: var(--tm-fg2) !important;
+    --secondary-icon: var(--tm-fg2) !important;
+  }
+  [role="button"]:is(:has(path[d^="M111 203a9.5"]), :has(path[d^="M101 936.5c"]), :has(path[d^="M456 410a2"])) svg {
+    background: var(--tm-fg2);
+  }
+  [role="button"]:is(:has(path[d^="M111 203a9.5"]), :has(path[d^="M101 936.5c"]), :has(path[d^="M456 410a2"])) svg * {
+    visibility: hidden;
+  }
+  [role="button"]:is(:has(path[d^="M111 203a9.5"]), :has(path[d^="M101 936.5c"]), :has(path[d^="M456 410a2"])):hover svg {
+    background: var(--tm-brand-icon);
+  }
+  [role="button"]:has(path[d^="M111 203a9.5"]) svg { -webkit-mask: {{icon:emoji-add-regular}} center / 20px 20px no-repeat; }
+  [role="button"]:has(path[d^="M111 203a9.5"]):hover svg { -webkit-mask-image: {{icon:emoji-add-filled}}; }
+  [role="button"]:has(path[d^="M101 936.5c"]) svg { -webkit-mask: {{icon:arrow-reply-down-20-regular}} center / 20px 20px no-repeat; }
+  [role="button"]:has(path[d^="M101 936.5c"]):hover svg { -webkit-mask-image: {{icon:arrow-reply-down-20-filled}}; }
+  [role="button"]:has(path[d^="M456 410a2"]) svg { -webkit-mask: {{icon:more-horizontal-20-regular}} center / 20px 20px no-repeat; }
+  [role="button"]:has(path[d^="M456 410a2"]):hover svg { -webkit-mask-image: {{icon:more-horizontal-20-filled}}; }
+}
+
+/* Reactions under a message: Teams' white pill with a thin line. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] [role="button"] > span > div[role="none"]:has(> div > div > span > img) {
+  --tm-react: 1;
+  padding: 3px 7px !important;
+  border: 1px solid var(--tm-stroke2) !important;
+  border-radius: 10000px !important;
+  background: var(--tm-card) !important;
+  box-shadow: none !important;
+}
+@container style(--tm-react: 1) {
+  div,
+  span {
+    width: auto !important;
+    height: auto !important;
+    background: transparent !important;
+  }
+  img {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  span {
+    color: var(--tm-fg1) !important;
+    font-size: 12px !important;
+  }
+}
+/* Seen: Teams' brand eye instead of the reader's tiny picture. */
+html[data-fmess-chats] [role="main"] [data-scope="messages_table"] > div:not([role]) > div > span > img {
+  content: var(--tm-eye);
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 0 !important;
+}
+
+/* Details: on the card, a hairline before them. */
+html[data-fmess-chats] [role="main"] [data-fmess-ui="details"] {
+  background: var(--tm-card) !important;
+  box-shadow: -1px 0 0 var(--tm-stroke-alpha) !important;
+}
+
+/* Emoji and reactions: Fluent Emoji (MIT), when emoji/emoji.css is there. */
+{{emoji}}
+
+/* Tooltips: Teams' white card (dark in dark mode), 12px type, 4px corners,
+   a soft shadow; not Facebook's inverted black bubble. */
+html [role="tooltip"] {
+  background: var(--tm-card) !important;
+  border-radius: 4px !important;
+  /* Teams: 4px 11px 6px inside a 1px clear border, around a 16px line;
+     Facebook's text is trimmed to its letters, so more padding here. */
+  padding: 8px 12px 11px !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 0 2px var(--tm-ambient)) drop-shadow(0 4px 8px var(--tm-key));
+}
+html [role="tooltip"] span {
+  font-size: 12px !important;
+  line-height: 16px !important;
+  color: var(--tm-fg1) !important;
+}
+
+/* Menus: Teams' (Fluent) menu: 4px corners, 4px padding, 32px items in
+   #424242 that turn dark on a grey hover, no arrow. */
+[role="menu"]:not([data-fmess-ui="reactions"]) > div:first-child {
+  border-radius: 4px !important;
+  background: var(--tm-card) !important;
+  box-shadow: var(--tm-shadow16) !important;
+}
+[role="menu"]:not([data-fmess-ui="reactions"]) > svg {
+  display: none !important;
+}
+[role="menu"]:not([data-fmess-ui="reactions"]) div[style*="max-height"] {
+  padding: 4px 0 !important;
+}
+[role="menu"] [role="menuitem"] {
+  min-height: 32px !important;
+  margin: 0 4px !important;
+  padding: 6px !important;
+  border-radius: 4px !important;
+  --primary-text: var(--tm-fg2) !important;
+  --primary-icon: var(--tm-fg2) !important;
+  --hover-overlay: var(--tm-hover) !important;
+}
+[role="menu"] [role="menuitem"]:hover {
+  --primary-text: var(--tm-fg1) !important;
+  --primary-icon: var(--tm-brand-icon) !important;
+}
+[role="menu"] [role="menuitem"] span {
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+[role="menu"] [role="menuitem"] > [role="none"] {
+  border-radius: 4px !important;
+}
+[role="menu"] hr {
+  margin: 4px 0 !important;
+  background: var(--tm-stroke2) !important;
+}
+
+/* Facebook's dark islands on a light page (toasts such as "All chats
+   loaded.", the photo viewer) keep their light text. */
+html:not([data-fmess-dark]) .__fb-dark-mode {
+  --primary-text: #e4e6eb !important;
+  --secondary-text: #b0b3b8 !important;
+  --primary-icon: #e4e6eb !important;
+  --secondary-icon: #b0b3b8 !important;
+}
+
+/* And its light islands on a dark page (toasts again: Facebook draws them the
+   other way round from the page) keep their dark text: the page's light
+   text made them white on white. */
+html[data-fmess-dark] .__fb-light-mode {
+  --primary-text: #050505 !important;
+  --secondary-text: #65676b !important;
+  --primary-icon: #050505 !important;
+  --secondary-icon: #65676b !important;
+}
+/* Tooltips: Facebook draws them in the other mode than the page. Teams'
+   are not inverted: a card in the page's colours, dark text on white. */
+html [role="tooltip"] :is(.__fb-dark-mode, .__fb-light-mode),
+html [role="tooltip"]:is(.__fb-dark-mode, .__fb-light-mode) {
+  --primary-text: var(--tm-fg1) !important;
+  --secondary-text: var(--tm-fg3) !important;
+  --primary-icon: var(--tm-fg1) !important;
+  --secondary-icon: var(--tm-fg3) !important;
+}

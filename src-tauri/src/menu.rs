@@ -33,6 +33,7 @@ const CHECK_FOR_UPDATES: &str = "check-for-updates";
 const QUIT: &str = "quit";
 const MESSENGER: &str = "messenger";
 const INSTAGRAM: &str = "instagram";
+const TOGGLE_FULLSCREEN: &str = "toggle-fullscreen";
 
 pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let lang = i18n::current(app);
@@ -250,7 +251,21 @@ pub fn handle<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
 /// page catches the same keys (Ctrl+, for Settings...) and asks for them here.
 #[tauri::command]
 pub fn menu_shortcut<R: Runtime>(app: AppHandle<R>, id: String) {
-    if [MESSAGES, SETTINGS, RELOAD, BACK, FORWARD, ZOOM_IN, ZOOM_OUT, ZOOM_RESET, MESSENGER, INSTAGRAM].contains(&id.as_str()) {
+    if [
+        MESSAGES,
+        SETTINGS,
+        RELOAD,
+        BACK,
+        FORWARD,
+        ZOOM_IN,
+        ZOOM_OUT,
+        ZOOM_RESET,
+        TOGGLE_FULLSCREEN,
+        MESSENGER,
+        INSTAGRAM,
+    ]
+    .contains(&id.as_str())
+    {
         run(&app, &id);
     }
 }
@@ -288,6 +303,12 @@ fn run<R: Runtime>(app: &AppHandle<R>, id: &str) {
         ZOOM_IN => settings::zoom_by(app, 1),
         ZOOM_OUT => settings::zoom_by(app, -1),
         ZOOM_RESET => settings::zoom_by(app, 0),
+        TOGGLE_FULLSCREEN => {
+            if let Some(window) = services::main_window(app) {
+                let is_fs = window.is_fullscreen().unwrap_or(false);
+                let _ = window.set_fullscreen(!is_fs);
+            }
+        }
         LOG_OUT => {
             if let Some(webview) = webview {
                 let _ = webview.eval("window.__fmessLogOut?.()");

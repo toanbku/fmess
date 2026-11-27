@@ -3,11 +3,14 @@
 
 mod about;
 mod badge;
+mod downloads;
+mod fonts;
 mod i18n;
 mod icon;
 mod links;
 mod menu;
 mod notify;
+mod recover;
 #[cfg(debug_assertions)]
 mod probe;
 mod services;
@@ -44,6 +47,14 @@ fn main() {
             tauri_plugin_window_state::Builder::default()
                 // Closing only hides the window, so never restore it hidden.
                 .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
+                // Not popups: they open centred on fMess's window anyway. On
+                // Windows restoring one froze fMess. A popup is built on the
+                // main thread, inside WebView2's new-window callback, and this
+                // plugin moved it while Tauri held its plugin lock; the move's
+                // own window events then waited for that lock forever. Labels
+                // start again at popup-1 each run, so every call after the
+                // first one closed hung.
+                .with_filter(|label| !label.starts_with(webview::POPUP_PREFIX))
                 .build(),
         )
         .plugin(tauri_plugin_autostart::Builder::new().arg(AUTOSTART_ARG).build())
@@ -56,6 +67,7 @@ fn main() {
             notify::clear_notifications,
             notify::test_notification,
             badge::set_unread_count,
+            downloads::show_download,
             settings::get_settings,
             settings::update_settings,
             settings::sync_messenger_prefs,
@@ -67,21 +79,26 @@ fn main() {
             themes::list_themes,
             themes::add_theme,
             themes::remove_theme,
+            fonts::list_fonts,
+            fonts::add_font,
+            fonts::remove_font,
             icon::choose_app_icon,
             icon::reset_app_icon,
+            update::check_for_updates,
             webview::set_viewer_open,
             menu::show_account_menu,
             menu::menu_shortcut,
             services::select_service,
             services::set_account,
+            recover::restart_for_stuck_chats,
         ])
         .on_menu_event(menu::handle)
         .setup(|app| {
             let handle = app.handle();
             app.manage(window_state::Closed::default());
-            #[cfg(windows)]
-            notify::register_app_id(handle);
             let settings = settings::init(handle);
+            #[cfg(windows)]
+            notify::register_app_id(handle, settings.app_name());
             handle.set_theme(settings::messenger_theme(settings.messenger_dark_mode.as_deref()));
             webview::create_main_window(handle, &settings)?;
             menu::install(handle)?;

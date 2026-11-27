@@ -44,8 +44,14 @@ fn main() {
                 "remove_theme",
                 "select_service",
                 "set_account",
+                "list_fonts",
+                "add_font",
+                "remove_font",
                 "choose_app_icon",
                 "reset_app_icon",
+                "show_download",
+                "check_for_updates",
+                "restart_for_stuck_chats",
             ])),
     )
     .expect("failed to run tauri-build");

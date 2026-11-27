@@ -41,6 +41,12 @@ pub fn check_now<R: Runtime>(app: &AppHandle<R>) {
     tauri::async_runtime::spawn(async move { check(&app, true).await });
 }
 
+/// Settings' Check Now, for people who don't find it in the menu.
+#[tauri::command]
+pub fn check_for_updates<R: Runtime>(app: AppHandle<R>) {
+    check_now(&app);
+}
+
 async fn check<R: Runtime>(app: &AppHandle<R>, asked: bool) {
     let found = match app.updater() {
         Ok(updater) => updater.check().await,

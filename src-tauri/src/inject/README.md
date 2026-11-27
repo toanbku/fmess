@@ -8,16 +8,17 @@ earlier part declares, and the numbers set that order.
 
 | Part | What it does |
 |---|---|
-| 01-start | Opens the script's function; debug listener log; `withRoot` |
+| 01-start | Opens the script's function; the browser's own timers; debug listener log; `withRoot` |
 | 02-splash | fMess's loading screen in place of Facebook's |
-| 03-facebook-modules | Adjusts a few of Facebook's own modules as they load; Close in call windows |
+| 03-facebook-modules | Adjusts a few of Facebook's own modules as they load; Close in call windows; Messenger's error screens |
 | 04-privacy | Block Typing (fMess Settings) |
 | 05-messenger-prefs | Loads Facebook modules on demand; Messenger's Preferences for the Settings window |
-| 06-routes | The chats' route and its marks on `<html>`; the cursor in the message box; links |
+| 06-routes | The chats' route and its marks on `<html>`; the cursor in the message box (not over another field); links |
 | 07-layout | Layout closer to the old desktop app; the strip under the window buttons |
 | 08-panes | Resizable chat list and details |
 | 09-marks | `data-fmess-ui` marks for themes, found without the page's language |
-| 10-selection | What can be selected; Select All; spell check in fields (Settings) |
+| 10-contextmenu | Right-click on a chat in the list or on a message opens its menu (again: the webview's) |
+| 10-selection | What can be selected; Select All; spell check in fields (Settings); a copied image pastes as the image |
 | 11-scrollbars | Overlay scroll bars |
 | 12-viewer | The photo/video viewer: its buttons and zoom |
 | 13-shortcuts | Keyboard shortcuts |
@@ -27,6 +28,9 @@ earlier part declares, and the numbers set that order.
 | 17-theme-hooks | Buttons, search box and quick reactions themes can ask for |
 | 18-notification-reply | Clicks on notifications and replying from them |
 | 19-account | Your picture and the account menu |
+| 19-downloads | Downloads from Facebook's CDN and unnamed ones; says when one is done, with Show in Finder |
+| 19-passkeys | Says why a passkey sign-in can't work in fMess and what to do instead (#9) |
+| 19-recover | Reloads the page by itself after the computer slept, when a connection stays down, on "Couldn't load chats" and when the encrypted chats stay stuck (then starts fMess again: recover.rs) |
 | 20-theme | The theme picked in Settings; settings from fMess; closes the function |
 
 The joined script is the same text the single file was; `node

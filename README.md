@@ -41,6 +41,8 @@ a window of their own again and makes it feel like the old app.
 - **Block Typing.** Nobody sees "typing…" while you draft.
 - **Messenger's settings in one place.** Sounds, Do Not Disturb, dark mode and
   active status next to fMess's own, synced with your phone.
+- **Themes.** Messenger's own look, or Zalo, WhatsApp and Teams looks, each in light
+  and dark. Add your own from a CSS file.
 - **Keyboard first.** Shortcuts below; opening a chat puts the cursor in its message box.
 - **Zoomable photos.** Pinch or double-click in the photo viewer.
 - **Always there.** Unread badge on the Dock or taskbar, a tray icon, keeps running
@@ -112,6 +114,15 @@ Facebook's page; fMess never sees your password, has no server and sends no
 analytics. The page can ask fMess for only a handful of things, like showing a
 notification (`src-tauri/capabilities/messenger-web.json`, `instagram-web.json`); it can't read your
 files or run programs.
+
+## Make a theme
+
+A theme is one CSS file: add it in **Settings › Theme › Add…**. Start from
+[`themes/starter/starter.css`](themes/starter/starter.css) for your own colours, or let a
+coding agent copy another app's look with the skill in
+[`.claude/skills/fmess-theme`](.claude/skills/fmess-theme/SKILL.md): screenshots of that app
+are enough. [`themes/README.md`](themes/README.md) has the details and how to send a theme
+in for everyone.
 
 ## Build from source
 

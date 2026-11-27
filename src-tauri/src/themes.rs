@@ -374,6 +374,15 @@ mod tests {
     }
 
     #[test]
+    fn starter_theme_loads_nothing_and_has_a_card() {
+        // themes/starter/starter.css, the file people copy to make their own.
+        let css = include_str!("../../themes/starter/starter.css");
+        assert!(check(css).is_ok(), "the starter loads something");
+        assert!(header(css, "name").is_some(), "the starter has no name");
+        assert!(preview(css).is_some(), "the starter has no preview colours");
+    }
+
+    #[test]
     fn makes_ids_from_file_names() {
         assert_eq!(slug("Zalo Look (2)"), "zalo-look-2");
         assert_eq!(slug("Lục"), "lc");

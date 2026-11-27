@@ -37,6 +37,8 @@ pub struct Settings {
     pub block_typing: bool,
     /// Show initials in place of people's pictures.
     pub hide_avatars: bool,
+    /// Mask message text, names and media, for screenshots and screen sharing.
+    pub redact_mode: bool,
     /// Fields check spelling. It knows only the system's languages: on a
     /// Windows set up in English nearly every Vietnamese word is underlined.
     pub spell_check: bool,
@@ -49,6 +51,9 @@ pub struct Settings {
     pub theme_icon: bool,
     /// The name on fMess's windows, tray and notifications; none is "fMess".
     pub app_name: Option<String>,
+    /// The font Messenger's text is set in, over the theme's; none keeps
+    /// Facebook's (or the theme's). Several can be given, comma-separated.
+    pub font: Option<String>,
     /// A picture chosen in Settings is the app's icon (see icon.rs).
     pub custom_icon: bool,
     /// Widths the panes were dragged to; none keeps Facebook's.
@@ -96,11 +101,13 @@ impl Default for Settings {
             mac_calls: true,
             block_typing: false,
             hide_avatars: false,
+            redact_mode: false,
             spell_check: true,
             messenger_dark_mode: None,
             theme: None,
             theme_icon: true,
             app_name: None,
+            font: None,
             custom_icon: false,
             pane_widths: PaneWidths::default(),
             instagram: false,
@@ -115,6 +122,10 @@ impl Default for Settings {
 impl Settings {
     pub fn app_name(&self) -> &str {
         self.app_name.as_deref().map(str::trim).filter(|name| !name.is_empty()).unwrap_or("fMess")
+    }
+
+    pub fn font(&self) -> Option<&str> {
+        self.font.as_deref().map(str::trim).filter(|font| !font.is_empty())
     }
 }
 
@@ -272,8 +283,10 @@ pub fn update_settings<R: Runtime>(
         }
         if settings.block_typing != previous.block_typing
             || settings.hide_avatars != previous.hide_avatars
+            || settings.redact_mode != previous.redact_mode
             || settings.spell_check != previous.spell_check
             || settings.theme != previous.theme
+            || settings.font() != previous.font()
             || language_changed
         {
             let _ = webview.eval(page_settings_script(&webview, &settings));
@@ -291,6 +304,11 @@ pub fn update_settings<R: Runtime>(
         }
     }
     Ok(view(&app, settings))
+}
+
+/// Whether Messenger's sounds are on, as the page last said (on until it has).
+pub fn messenger_sounds_on<R: Runtime>(app: &AppHandle<R>) -> bool {
+    app.state::<MessengerPrefsState>().0.lock().unwrap().as_ref().map_or(true, |prefs| prefs.sounds_on)
 }
 
 /// Called by inject.js with Messenger's Preferences, which the phone app or
@@ -405,8 +423,12 @@ pub fn page_settings<R: Runtime>(app: &AppHandle<R>, settings: &Settings, servic
         "macCalls": settings.mac_calls,
         "blockTyping": settings.block_typing,
         "hideAvatars": settings.hide_avatars,
+        "redactMode": settings.redact_mode,
         "spellCheck": settings.spell_check,
         "theme": theme,
+        "font": settings.font(),
+        // The added files of that font (Settings › Font › Add…).
+        "fontFaces": crate::fonts::faces_for(app, settings.font()),
         "paneWidths": settings.pane_widths,
         "sidebarCollapsed": settings.sidebar_collapsed,
         // For the notifications the page writes itself.
@@ -441,8 +463,9 @@ pub fn set_custom_icon<R: Runtime>(app: &AppHandle<R>, on: bool) -> Result<(), S
     change(app, |settings| settings.custom_icon = on).map(drop)
 }
 
-/// Renames fMess's open windows and tray icon; the Dock, the menu bar and the
-/// Start menu keep the name it was installed with.
+/// Renames fMess's open windows and tray icon, and on Windows the name at the
+/// top of its notifications; the Dock, the menu bar and the Start menu keep
+/// the name it was installed with, and so do macOS's notifications.
 fn apply_app_name<R: Runtime>(app: &AppHandle<R>, name: &str) {
     if let Some(window) = services::main_window(app) {
         let _ = window.set_title(name);
@@ -453,6 +476,8 @@ fn apply_app_name<R: Runtime>(app: &AppHandle<R>, name: &str) {
         }
     }
     menu::set_tooltip(app, name);
+    #[cfg(windows)]
+    crate::notify::name_app_id(app, name);
 }
 
 /// Changes the settings and saves them. The lock is held from reading to

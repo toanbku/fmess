@@ -103,3 +103,68 @@
   `;
   withRoot((root) => root.append(layoutStyle));
 
+  // In a chat with a gradient theme, Facebook paints the box around the
+  // messages with that gradient (in its inline style), under the messages,
+  // which cover it but for your bubbles. On macOS a fast scroll outran
+  // WebKit's painting, and the parts not yet painted showed the gradient: the
+  // chat flashed purple and blue (#27, #41).
+  // Your bubbles show that gradient one of two ways: each paints it itself (a
+  // fixed background), or each has no colour (Messenger's class for their
+  // colour gives them the chat's, transparent here) and shows the box through
+  // it. So the bubbles with that class paint it themselves, fixed to the
+  // window as the box's is, and the box goes without. The class is looked up
+  // in Facebook's style sheets rather than written here: until it is found
+  // (if Facebook stops colouring bubbles that way), the box keeps its
+  // gradient, and the flash comes back rather than bare bubbles. Up to 0.1.34
+  // the box went without only while one of your bubbles was in the chat,
+  // which left the flash in chats showing only the other side's messages.
+  // A wallpaper (a picture) stays. Themes set the gradient to initial, so
+  // their bubbles keep their colour, and paint the box themselves (:where
+  // adds no weight).
+  const GRADIENT = '--chat-outgoing-message-background-gradient';
+  const BUBBLE_COLOUR = /^var\(--chat-outgoing-message-bubble-background-color[,)]/;
+  const gradientStyle = document.createElement('style');
+  // Facebook adds rules to its sheets as it goes: a sheet is read again only
+  // once it has more.
+  const rulesRead = new WeakMap();
+  const bubbleClasses = () => {
+    const classes = new Set();
+    const read = (rules) => {
+      for (const rule of rules) {
+        if (rule.cssRules && !rule.selectorText) read(rule.cssRules);
+        else if (/^\.[\w-]+$/.test(rule.selectorText ?? '') && BUBBLE_COLOUR.test(rule.style?.getPropertyValue('background-color').replace(/\s/g, '') ?? '')) {
+          classes.add(rule.selectorText);
+        }
+      }
+    };
+    for (const sheet of document.styleSheets) {
+      let rules;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        continue;
+      }
+      if (rulesRead.get(sheet) === rules.length) continue;
+      rulesRead.set(sheet, rules.length);
+      read(rules);
+    }
+    return [...classes];
+  };
+  const paintGradientBubbles = () => {
+    if (gradientStyle.isConnected || !document.querySelector(`[role="main"] [style*="${GRADIENT}"]`)) return;
+    const classes = bubbleClasses();
+    if (!classes.length) return;
+    const chat = `html[${CHATS}] [role="main"] [style*="${GRADIENT}"]`;
+    gradientStyle.textContent = `
+      ${chat} :is(${classes.join(', ')}) {
+        background-image: var(${GRADIENT}) !important;
+        background-attachment: fixed !important;
+      }
+      :where(${chat}:is([style*="background-image: linear-gradient"], [style*="background-image:linear-gradient"])) {
+        background-image: none !important;
+      }
+    `;
+    withRoot((root) => root.append(gradientStyle));
+  };
+  setInterval(paintGradientBubbles, 1000);
+
