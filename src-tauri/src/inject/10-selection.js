@@ -97,35 +97,75 @@
   }
   // Double-clicking empty space in a message row initiates a reply to that
   // message, as in Zalo PC. Double-clicking text selects words as usual.
+  const REPLY_LABEL = /(?:^|\s|\b)(?:reply|trả lời|répondre|responder|antworten|rispondi|ответить)|返信|답장|回复|回覆/i;
+  const isReactButton = (button) => {
+    if (!(button instanceof Element) || button.getAttribute('role') !== 'button') return false;
+    const paths = [...button.querySelectorAll('svg path')].map((p) => p.getAttribute('d') ?? '');
+    if (paths.some((d) => /^M13\.5 10a1\.5|^M10 \.5a9\.5|^M111 203a9\.5/i.test(d))) return true;
+    return /react|cảm xúc/i.test(button.getAttribute('aria-label') ?? '');
+  };
   const isReplyButton = (button) => {
     if (!(button instanceof Element) || button.getAttribute('role') !== 'button') return false;
-    const d = button.querySelector('svg path')?.getAttribute('d') ?? '';
-    return /^m101 936\.5c/i.test(d) || /reply|trả lời/i.test(button.getAttribute('aria-label') ?? '');
+    if (button.getAttribute('aria-haspopup') === 'menu' || isReactButton(button)) return false;
+    const paths = [...button.querySelectorAll('svg path')].map((p) => p.getAttribute('d') ?? '');
+    return paths.some((d) => /^M6\.497 1\.035|^m101 936\.5c/i.test(d)) || REPLY_LABEL.test(button.getAttribute('aria-label') ?? '');
   };
-  const findReplyButton = (row) => {
-    const buttons = [...row.querySelectorAll('[role="toolbar"] [role="button"]:not(.fmess-quick-reaction)')];
-    return buttons.find(isReplyButton) ?? (buttons.length === 3 ? buttons[1] : null);
+  const isMoreIconButton = (button) => {
+    if (!(button instanceof Element) || button.getAttribute('role') !== 'button') return false;
+    if (isReactButton(button) || isReplyButton(button)) return false;
+    const paths = [...button.querySelectorAll('svg path')].map((p) => p.getAttribute('d') ?? '');
+    return paths.some((d) => /^M8\.25 4a1\.75|^M456[,\s]410/i.test(d));
   };
-  const waitReplyButton = (row, ms = 400) =>
+  const toolbarButtons = (row) => [...row.querySelectorAll('[role="toolbar"] [role="button"]:not(.fmess-quick-reaction)')];
+  const findReplyButton = (row) => toolbarButtons(row).find(isReplyButton) ?? null;
+  const findMoreButton = (row) => {
+    const buttons = toolbarButtons(row);
+    if (buttons.length < 2) return null;
+    return (
+      buttons.find(isMoreIconButton) ??
+      buttons.find((b) => b.getAttribute('aria-haspopup') === 'menu' && !isReactButton(b) && !isReplyButton(b)) ??
+      null
+    );
+  };
+  const isVisibleEl = (el) => {
+    const r = el?.getBoundingClientRect?.();
+    return Boolean(r && r.width > 0 && r.height > 0);
+  };
+  const findMenuReplyItem = (ignoredMenus) => {
+    for (const menu of document.querySelectorAll('[role="menu"]:not([data-fmess-ui="reactions"])')) {
+      if (ignoredMenus?.has(menu) || !isVisibleEl(menu)) continue;
+      for (const item of menu.querySelectorAll('[role="menuitem"]')) {
+        if (!isVisibleEl(item)) continue;
+        const label = `${item.getAttribute('aria-label') ?? ''} ${item.textContent ?? ''}`.trim();
+        if (REPLY_LABEL.test(label)) return item;
+      }
+    }
+    return null;
+  };
+  const hasNewVisibleMenu = (ignoredMenus) =>
+    [...document.querySelectorAll('[role="menu"]:not([data-fmess-ui="reactions"])')].some(
+      (menu) => !ignoredMenus?.has(menu) && isVisibleEl(menu) && menu.querySelector('[role="menuitem"]'),
+    );
+  const waitForInRow = (root, check, ms = 400) =>
     new Promise((resolve) => {
-      const immediate = findReplyButton(row);
-      if (immediate) return resolve(immediate);
+      const immediate = check();
+      if (immediate !== undefined) return resolve(immediate);
       let timer = null;
       let observer = null;
       if (typeof MutationObserver !== 'undefined') {
         observer = new MutationObserver(() => {
-          const found = findReplyButton(row);
-          if (found) {
+          const found = check();
+          if (found !== undefined) {
             clearTimeout(timer);
             observer.disconnect();
             resolve(found);
           }
         });
-        observer.observe(row, { childList: true, subtree: true });
+        observer.observe(root, { childList: true, subtree: true });
       }
       timer = setTimeout(() => {
         if (observer) observer.disconnect();
-        resolve(findReplyButton(row));
+        resolve(check());
       }, ms);
     });
   const findMessageRow = (target) => {
@@ -140,24 +180,43 @@
     target instanceof Element &&
     Boolean(
       target.closest(
-        'a[href], button, [role="button"], img, video, audio, blockquote, [role="toolbar"], [dir="auto"], [data-scope="date_break"], input, textarea, [contenteditable="true"]',
+        'a[href], button, [role="button"], [role="slider"], [role="progressbar"], img, [role="img"], video, audio, canvas, svg, blockquote, [role="toolbar"], [dir="auto"], [data-scope="date_break"], input, textarea, [contenteditable="true"]',
       ),
     );
+  const isRowChrome = (el, rect, row, rowRect) => {
+    if (el.closest('[role="toolbar"]')) return true;
+    // Messenger places a small overflow:hidden accessibility button ("Enter, Message sent...")
+    // at the far right edge containing a clipped vertical span[dir="auto"].
+    const btn = el.closest('[role="button"], button');
+    if (btn && btn !== row) {
+      const btnRect = btn.getBoundingClientRect();
+      if (btnRect.width > 0 && btnRect.height > 0) {
+        if (rect.height > btnRect.height * 2 || rect.width > btnRect.width * 2) return true;
+        if (btnRect.width <= 36 && btnRect.height <= 36 && rowRect.right - btnRect.right <= 32) return true;
+      }
+    }
+    const tag = el.tagName?.toUpperCase?.() ?? '';
+    // Tiny delivery/seen-receipt avatars (e.g. 14x14) at the row edge are not message content.
+    if (tag === 'IMG' && rect.width <= 20 && rect.height <= 20 && !el.closest('[dir="auto"]')) return true;
+    // Small SVGs are status icons (checkmarks); larger ones are stickers/thumbs-up.
+    if (tag === 'SVG' && rect.width < 28 && rect.height < 28) return true;
+    return false;
+  };
   const isEmptySpaceClick = (row, x, y) => {
     const rowRect = row.getBoundingClientRect();
     if (y < rowRect.top || y > rowRect.bottom || x < rowRect.left || x > rowRect.right) return false;
-    const interactive = row.querySelectorAll('[role="button"], [role="toolbar"]');
+    const interactive = row.querySelectorAll('[role="button"], [role="toolbar"], [role="slider"], [role="progressbar"]');
     for (const el of interactive) {
       const rect = el.getBoundingClientRect();
       if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) return false;
     }
     const messageTargets = (row.matches('[data-message-id]') ? [row] : []).concat([
-      ...row.querySelectorAll('[data-message-id], [dir="auto"], blockquote, img, video, audio'),
+      ...row.querySelectorAll('[data-message-id], [dir="auto"], blockquote, img, [role="img"], video, audio, canvas, svg, [role="slider"], [role="progressbar"], a[href]'),
     ]);
     const contentRects = [];
     for (const el of messageTargets) {
       const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0 && rect.width < rowRect.width * 0.95) {
+      if (rect.width > 0 && rect.height > 0 && rect.width < rowRect.width * 0.95 && !isRowChrome(el, rect, row, rowRect)) {
         contentRects.push(rect);
       }
     }
@@ -175,23 +234,56 @@
     const contentMid = (contentLeft + contentRight) / 2;
     return contentMid > rowMid ? x < contentLeft : x > contentRight;
   };
+  let replyInFlight = false;
   const triggerReply = async (row) => {
-    let button = findReplyButton(row);
-    if (!button) {
-      const target = row.querySelector('[data-message-id]') ?? row;
-      const mouseEvent =
-        typeof MouseEvent !== 'undefined'
-          ? new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window })
-          : { type: 'mouseover' };
-      target.dispatchEvent(mouseEvent);
-      button = await waitReplyButton(row, 400);
+    if (replyInFlight) return false;
+    replyInFlight = true;
+    try {
+      const focusComposer = () => row.closest('[role="main"]')?.querySelector('[role="textbox"][contenteditable="true"]')?.focus();
+      if (!toolbarButtons(row).length) {
+        const target = row.querySelector('[data-message-id]') ?? row;
+        if (typeof MouseEvent !== 'undefined') {
+          target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window }));
+          target.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true, view: window }));
+        } else {
+          target.dispatchEvent({ type: 'mouseover' });
+        }
+        await waitForInRow(row, () => (toolbarButtons(row).length > 0 ? true : undefined), 400);
+      }
+      const direct = findReplyButton(row);
+      if (direct) {
+        direct.click();
+        focusComposer();
+        return true;
+      }
+      // Media messages (images, videos, etc.) replace Reply with Forward in the
+      // hover toolbar and move Reply into the "More actions" menu.
+      const more = findMoreButton(row);
+      if (!more) return false;
+      const existingMenus = new Set([...document.querySelectorAll('[role="menu"]:not([data-fmess-ui="reactions"])')].filter(isVisibleEl));
+      more.click();
+      const menuRoot = document.body ?? document.documentElement;
+      const item = await waitForInRow(
+        menuRoot,
+        () => findMenuReplyItem(existingMenus) ?? (hasNewVisibleMenu(existingMenus) ? null : undefined),
+        400,
+      );
+      if (item) {
+        item.click();
+        focusComposer();
+        return true;
+      }
+      if (hasNewVisibleMenu(existingMenus)) {
+        document.dispatchEvent(
+          typeof KeyboardEvent !== 'undefined'
+            ? new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true })
+            : { type: 'keydown', key: 'Escape' },
+        );
+      }
+      return false;
+    } finally {
+      replyInFlight = false;
     }
-    if (button) {
-      button.click();
-      row.closest('[role="main"]')?.querySelector('[role="textbox"][contenteditable="true"]')?.focus();
-      return true;
-    }
-    return false;
   };
   document.addEventListener(
     'dblclick',
