@@ -58,20 +58,17 @@
   // :root) and runs "account" and "settings" as above; the account menu
   // opens under the button, kept inside the window (about 200px wide).
   // "sidebar" folds the theme's sidebar (the Teams look's app bar) away and
-  // back: data-fmess-sidebar-collapsed on <html>, kept for next time, for
-  // the theme to fold it. A press there doesn't drag the window, though the
-  // title strip is under it.
+  // back: data-fmess-sidebar-collapsed on <html>, kept in fMess's settings
+  // for next time, for the theme to fold it; a theme that draws fMess's rail
+  // folds the rail with it (settings.rs). A press there doesn't drag the
+  // window, though the title strip is under it.
   // The list is read again at most once a second, not on every move.
   const SIDEBAR_COLLAPSED = 'data-fmess-sidebar-collapsed';
-  const SIDEBAR_COLLAPSED_KEY = 'fmess.sidebarCollapsed';
-  try {
-    if (localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1') withRoot((root) => root.setAttribute(SIDEBAR_COLLAPSED, ''));
-  } catch {}
+  const setSidebarCollapsed = (collapsed) => withRoot((root) => root.toggleAttribute(SIDEBAR_COLLAPSED, collapsed));
+  setSidebarCollapsed(Boolean(settings.sidebarCollapsed));
   const toggleSidebar = () => {
     const collapsed = document.documentElement.toggleAttribute(SIDEBAR_COLLAPSED);
-    try {
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0');
-    } catch {}
+    invoke('set_sidebar_collapsed', { collapsed }).catch(() => {});
   };
   let windowButtons = { at: 0, specs: [] };
   const windowButtonAt = (x, y) => {

@@ -1,28 +1,57 @@
-use std::sync::atomic::{AtomicI64, Ordering};
+use std::{collections::HashMap, sync::Mutex};
 
-use tauri::{Manager, Runtime, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, Runtime, Webview, Window};
 
-use crate::{settings, MAIN_WINDOW};
+use crate::{
+    services::{self, Service},
+    settings,
+};
 
-/// The unread chat count inject.js last reported.
-static UNREAD: AtomicI64 = AtomicI64::new(0);
+/// The unread chat counts the services last reported.
+static UNREAD: Mutex<Option<HashMap<Service, i64>>> = Mutex::new(None);
 
-/// Called by inject.js with the number of unread chats in the list. (The page
-/// title counts Facebook's own notifications, so it can't be used.)
+/// Called by each service's page with the number of unread chats in its
+/// list. (Messenger's page title counts Facebook's own notifications, so it
+/// can't be used.)
 #[tauri::command]
-pub fn set_unread_count<R: Runtime>(app: tauri::AppHandle<R>, count: i64) {
+pub fn set_unread_count<R: Runtime>(webview: Webview<R>, count: i64) {
+    let Some(service) = Service::from_label(webview.label()) else {
+        return;
+    };
+    // A page closing after Instagram was turned off may still report.
+    if service == Service::Instagram && !settings::current(webview.app_handle()).instagram {
+        return;
+    }
+    let count = count.max(0);
     #[cfg(debug_assertions)]
-    eprintln!("[fmess] unread chats: {count}");
-    UNREAD.store(count, Ordering::Relaxed);
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
+    eprintln!("[fmess] unread chats in {}: {count}", service.label());
+    UNREAD.lock().unwrap().get_or_insert_with(HashMap::new).insert(service, count);
+    changed(webview.app_handle(), service, count);
+}
+
+/// A service that was turned off has no unread chats.
+pub fn forget<R: Runtime>(app: &AppHandle<R>, service: Service) {
+    if let Some(unread) = UNREAD.lock().unwrap().as_mut() {
+        unread.remove(&service);
+    }
+    changed(app, service, 0);
+}
+
+fn changed<R: Runtime>(app: &AppHandle<R>, service: Service, count: i64) {
+    let _ = app.emit_to(services::RAIL, "unread", serde_json::json!({ "service": service, "count": count }));
+    if let Some(window) = services::main_window(app) {
         refresh(&window);
     }
 }
 
-/// Shows the last reported count, or nothing when the badge is turned off.
-pub fn refresh<R: Runtime>(window: &WebviewWindow<R>) {
+pub fn counts() -> HashMap<Service, i64> {
+    UNREAD.lock().unwrap().clone().unwrap_or_default()
+}
+
+/// Shows the services' total, or nothing when the badge is turned off.
+pub fn refresh<R: Runtime>(window: &Window<R>) {
     let count = if settings::current(window.app_handle()).badge {
-        UNREAD.load(Ordering::Relaxed)
+        counts().values().sum()
     } else {
         0
     };
@@ -30,13 +59,13 @@ pub fn refresh<R: Runtime>(window: &WebviewWindow<R>) {
 }
 
 #[cfg(not(target_os = "windows"))]
-fn show<R: Runtime>(window: &WebviewWindow<R>, count: i64) {
+fn show<R: Runtime>(window: &Window<R>, count: i64) {
     let _ = window.set_badge_count((count > 0).then_some(count));
 }
 
 /// Windows has no numeric taskbar badge; show a red dot overlay instead.
 #[cfg(target_os = "windows")]
-fn show<R: Runtime>(window: &WebviewWindow<R>, count: i64) {
+fn show<R: Runtime>(window: &Window<R>, count: i64) {
     let _ = window.set_overlay_icon((count > 0).then(red_dot));
 }
 

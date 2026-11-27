@@ -17,7 +17,7 @@ use ttf_parser::Tag;
 
 use crate::{
     i18n::{self, pick, Lang},
-    settings, MAIN_WINDOW,
+    settings,
 };
 
 /// The page gets an added font with its settings, after every load, so a
@@ -232,8 +232,9 @@ pub fn remove_font<R: Runtime>(app: AppHandle<R>, family: String) -> Result<(), 
 /// The page's @font-face rules follow the files even when the Font setting
 /// stays the same (a file added for the font already picked).
 fn refresh_page<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
-        let _ = window.eval(settings::page_settings_script(app, &settings::current(app)));
+    let settings = settings::current(app);
+    for webview in crate::services::webviews(app) {
+        let _ = webview.eval(settings::page_settings_script(&webview, &settings));
     }
 }
 

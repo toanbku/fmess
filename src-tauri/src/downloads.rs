@@ -8,7 +8,7 @@ use std::{path::PathBuf, sync::Mutex};
 use tauri::{webview::DownloadEvent, AppHandle, Runtime, Webview};
 use tauri_plugin_opener::OpenerExt;
 
-use crate::MAIN_WINDOW;
+use crate::services::Service;
 
 /// Where each download in progress is saved, by its URL: macOS doesn't say
 /// where when one finishes.
@@ -56,9 +56,9 @@ fn finished<R: Runtime>(webview: &Webview<R>, path: Option<PathBuf>, success: bo
             bounce_downloads_stack(&path);
             let mut saved = SAVED.lock().unwrap();
             saved.push(path);
-            // Only the main window may call show_download (see
+            // Only Messenger's web view may call show_download (see
             // capabilities/messenger-web.json): a popup gets no button.
-            (webview.label() == MAIN_WINDOW).then(|| saved.len() - 1)
+            (webview.label() == Service::Messenger.label()).then(|| saved.len() - 1)
         }
         _ => None,
     };

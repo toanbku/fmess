@@ -1,15 +1,15 @@
 use tauri::{
     menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, LogicalPosition, Manager, Runtime, WebviewWindow,
+    AppHandle, LogicalPosition, Manager, Runtime, Webview,
 };
 
 use crate::{
     about,
     i18n::{self, pick, Lang},
+    services::{self, Service},
     settings, show_main_window, update,
     webview::{self, messages_url},
-    MAIN_WINDOW,
 };
 
 const TRAY: &str = "main";
@@ -31,6 +31,8 @@ const ZOOM_RESET: &str = "zoom-reset";
 const ABOUT: &str = "about";
 const CHECK_FOR_UPDATES: &str = "check-for-updates";
 const QUIT: &str = "quit";
+const MESSENGER: &str = "messenger";
+const INSTAGRAM: &str = "instagram";
 const TOGGLE_FULLSCREEN: &str = "toggle-fullscreen";
 
 pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
@@ -159,6 +161,10 @@ fn app_menu<R: Runtime>(app: &AppHandle<R>, lang: Lang) -> tauri::Result<Menu<R>
         t("Go", "Đi"),
         true,
         &[
+            // Brand names, the same in every language.
+            &MenuItem::with_id(app, MESSENGER, "Messenger", true, Some("Ctrl+Cmd+1"))?,
+            &MenuItem::with_id(app, INSTAGRAM, "Instagram", true, Some("Ctrl+Cmd+2"))?,
+            &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(app, MESSAGES, t("Chats", "Đoạn chat"), true, Some("CmdOrCtrl+Shift+H"))?,
             &MenuItem::with_id(app, SEARCH, t("Search", "Tìm kiếm"), true, Some("CmdOrCtrl+K"))?,
             &MenuItem::with_id(app, NEW_MESSAGE, t("New Message", "Tin nhắn mới"), true, Some("CmdOrCtrl+N"))?,
@@ -202,16 +208,17 @@ fn app_menu<R: Runtime>(app: &AppHandle<R>, lang: Lang) -> tauri::Result<Menu<R>
     Menu::with_items(app, &[&app_submenu, &file, &edit, &view, &go, &window, &help])
 }
 
-/// The old desktop app's account menu: inject.js puts the account's picture
-/// above the chats, and clicking it opens this under the picture.
+/// The old desktop app's account menu: the rail and inject.js show the
+/// account's picture, and clicking it opens this beside the picture. Its
+/// items act on Messenger, whichever web view asked.
 #[tauri::command]
 pub fn show_account_menu<R: Runtime>(
-    window: WebviewWindow<R>,
+    webview: Webview<R>,
     name: String,
     x: f64,
     y: f64,
 ) -> tauri::Result<()> {
-    let app = window.app_handle();
+    let app = webview.app_handle();
     let lang = i18n::current(app);
     let t = |en, vi| pick(lang, en, vi);
     let menu = Menu::with_items(
@@ -224,9 +231,15 @@ pub fn show_account_menu<R: Runtime>(
             &MenuItem::with_id(app, LOG_OUT, t("Log Out", "Đăng xuất"), true, None::<&str>)?,
         ],
     )?;
-    // The page measures in CSS pixels, which fMess's zoom setting scales.
-    let zoom = settings::current(app).zoom;
-    window.popup_menu_at(&menu, LogicalPosition::new(x * zoom, y * zoom))
+    // The page measures in CSS pixels, which fMess's zoom setting scales (not the rail's).
+    let zoom = if Service::from_label(webview.label()).is_some() {
+        settings::current(app).zoom
+    } else {
+        1.0
+    };
+    let window = webview.window();
+    let origin = webview.position()?.to_logical::<f64>(window.scale_factor()?);
+    window.popup_menu_at(&menu, LogicalPosition::new(origin.x + x * zoom, origin.y + y * zoom))
 }
 
 /// Handles clicks from the tray menu, the macOS menu bar and the account menu.
@@ -248,6 +261,8 @@ pub fn menu_shortcut<R: Runtime>(app: AppHandle<R>, id: String) {
         ZOOM_OUT,
         ZOOM_RESET,
         TOGGLE_FULLSCREEN,
+        MESSENGER,
+        INSTAGRAM,
     ]
     .contains(&id.as_str())
     {
@@ -256,28 +271,30 @@ pub fn menu_shortcut<R: Runtime>(app: AppHandle<R>, id: String) {
 }
 
 fn run<R: Runtime>(app: &AppHandle<R>, id: &str) {
-    let window = app.get_webview_window(MAIN_WINDOW);
+    let webview = services::webview(app, Service::Messenger);
+    let shown = services::webview(app, services::selected(app));
     match id {
         SHOW => show_main_window(app),
         MESSAGES => {
             show_main_window(app);
-            if let Some(window) = window {
-                let _ = window.navigate(messages_url());
+            services::select(app, Service::Messenger);
+            if let Some(webview) = webview {
+                let _ = webview.navigate(messages_url());
             }
         }
         RELOAD => {
-            if let Some(window) = window {
-                let _ = window.reload();
+            if let Some(shown) = shown {
+                let _ = shown.reload();
             }
         }
         BACK => {
-            if let Some(window) = window {
-                let _ = window.eval("history.back()");
+            if let Some(shown) = shown {
+                let _ = shown.eval("history.back()");
             }
         }
         FORWARD => {
-            if let Some(window) = window {
-                let _ = window.eval("history.forward()");
+            if let Some(shown) = shown {
+                let _ = shown.eval("history.forward()");
             }
         }
         SETTINGS => webview::open_settings_window(app),
@@ -287,14 +304,14 @@ fn run<R: Runtime>(app: &AppHandle<R>, id: &str) {
         ZOOM_OUT => settings::zoom_by(app, -1),
         ZOOM_RESET => settings::zoom_by(app, 0),
         TOGGLE_FULLSCREEN => {
-            if let Some(window) = window {
+            if let Some(window) = services::main_window(app) {
                 let is_fs = window.is_fullscreen().unwrap_or(false);
                 let _ = window.set_fullscreen(!is_fs);
             }
         }
         LOG_OUT => {
-            if let Some(window) = window {
-                let _ = window.eval("window.__fmessLogOut?.()");
+            if let Some(webview) = webview {
+                let _ = webview.eval("window.__fmessLogOut?.()");
             }
         }
         // The shortcuts live in inject.js; the menu shows them and forwards to them.
@@ -305,10 +322,12 @@ fn run<R: Runtime>(app: &AppHandle<R>, id: &str) {
                 NEXT_CHAT => "'moveChat', 1",
                 _ => "'moveChat', -1",
             };
-            if let Some(window) = window {
-                let _ = window.eval(format!("window.__fmessShortcut?.({call})"));
+            if let Some(webview) = webview {
+                let _ = webview.eval(format!("window.__fmessShortcut?.({call})"));
             }
         }
+        MESSENGER => services::select(app, Service::Messenger),
+        INSTAGRAM => services::select(app, Service::Instagram),
         QUIT => app.exit(0),
         _ => {}
     }
