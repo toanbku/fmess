@@ -105,6 +105,7 @@
   window.__fmessApplySettings = (next) => {
     privacy.blockTyping = Boolean(next.blockTyping);
     language = next.lang;
+    applyPinnedSettings(next.pinnedChats);
     setHideAvatars(Boolean(next.hideAvatars));
     setRedactMode(Boolean(next.redactMode));
     setSpellCheck(next.spellCheck !== false);

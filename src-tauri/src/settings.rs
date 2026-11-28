@@ -1,4 +1,5 @@
 use std::{
+    collections::{BTreeMap, HashSet},
     fs,
     path::{Path, PathBuf},
     sync::Mutex,
@@ -57,6 +58,10 @@ pub struct Settings {
     pub custom_icon: bool,
     /// Widths the panes were dragged to; none keeps Facebook's.
     pub pane_widths: PaneWidths,
+    /// Per-account local pinned-chat overrides (numeric thread IDs only),
+    /// merged in the page with Messenger's server-synced mobile pins.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub pinned_chats: BTreeMap<String, AccountPinnedChats>,
     /// fMess's own language, "en" or "vi"; none follows the system (i18n.rs).
     pub language: Option<String>,
 }
@@ -69,6 +74,60 @@ pub struct PaneWidths {
     pub list: Option<u32>,
     /// The chat's details, beside the messages.
     pub details: Option<u32>,
+}
+
+/// Local pinned-chat overrides for one Facebook account (set_pinned_chats).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct AccountPinnedChats {
+    /// Locally pinned thread IDs (this device only).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub pinned: Vec<String>,
+    /// Server-pinned thread IDs hidden locally on this device.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub hidden: Vec<String>,
+    /// Custom display order when pinned chats were reordered on this device.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub order: Vec<String>,
+}
+
+const MAX_PINNED_CHATS: usize = 50;
+const MAX_PINNED_ORDER: usize = 100;
+
+fn valid_numeric_id(value: &str) -> bool {
+    !value.is_empty() && value.len() <= 32 && value.bytes().all(|b| b.is_ascii_digit())
+}
+
+fn sanitize_ids(ids: Vec<String>, limit: usize) -> Vec<String> {
+    let mut seen = HashSet::new();
+    let mut out = Vec::new();
+    for id in ids {
+        if out.len() >= limit {
+            break;
+        }
+        if valid_numeric_id(&id) && seen.insert(id.clone()) {
+            out.push(id);
+        }
+    }
+    out
+}
+
+fn sanitize_pinned_chats(chats: AccountPinnedChats) -> AccountPinnedChats {
+    let hidden = sanitize_ids(chats.hidden, MAX_PINNED_CHATS);
+    let hidden_set: HashSet<&str> = hidden.iter().map(String::as_str).collect();
+    let pinned: Vec<String> = sanitize_ids(chats.pinned, MAX_PINNED_CHATS)
+        .into_iter()
+        .filter(|id| !hidden_set.contains(id.as_str()))
+        .collect();
+    let order: Vec<String> = sanitize_ids(chats.order, MAX_PINNED_ORDER)
+        .into_iter()
+        .filter(|id| !hidden_set.contains(id.as_str()))
+        .collect();
+    AccountPinnedChats {
+        pinned,
+        hidden,
+        order,
+    }
 }
 
 impl Default for Settings {
@@ -92,6 +151,7 @@ impl Default for Settings {
             font: None,
             custom_icon: false,
             pane_widths: PaneWidths::default(),
+            pinned_chats: BTreeMap::new(),
             language: None,
         }
     }
@@ -99,11 +159,18 @@ impl Default for Settings {
 
 impl Settings {
     pub fn app_name(&self) -> &str {
-        self.app_name.as_deref().map(str::trim).filter(|name| !name.is_empty()).unwrap_or("fMess")
+        self.app_name
+            .as_deref()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .unwrap_or("fMess")
     }
 
     pub fn font(&self) -> Option<&str> {
-        self.font.as_deref().map(str::trim).filter(|font| !font.is_empty())
+        self.font
+            .as_deref()
+            .map(str::trim)
+            .filter(|font| !font.is_empty())
     }
 }
 
@@ -167,11 +234,17 @@ pub fn update_settings<R: Runtime>(
     let previous = current(&app);
     let autostart = app.autolaunch();
     if autostart.is_enabled().unwrap_or(false) != launch_at_login {
-        let result = if launch_at_login { autostart.enable() } else { autostart.disable() };
-        result.map_err(|err| match Lang::from_setting(settings.language.as_deref()) {
-            Lang::En => format!("could not change Open at Login: {err}"),
-            Lang::Vi => format!("Không đổi được mục Mở khi đăng nhập: {err}"),
-        })?;
+        let result = if launch_at_login {
+            autostart.enable()
+        } else {
+            autostart.disable()
+        };
+        result.map_err(
+            |err| match Lang::from_setting(settings.language.as_deref()) {
+                Lang::En => format!("could not change Open at Login: {err}"),
+                Lang::Vi => format!("Không đổi được mục Mở khi đăng nhập: {err}"),
+            },
+        )?;
     }
 
     let settings = change(&app, |current| {
@@ -179,10 +252,16 @@ pub fn update_settings<R: Runtime>(
         let kept = (
             current.messenger_dark_mode.take(),
             std::mem::take(&mut current.pane_widths),
+            std::mem::take(&mut current.pinned_chats),
             current.custom_icon,
         );
         *current = settings;
-        (current.messenger_dark_mode, current.pane_widths, current.custom_icon) = kept;
+        (
+            current.messenger_dark_mode,
+            current.pane_widths,
+            current.pinned_chats,
+            current.custom_icon,
+        ) = kept;
     })?;
 
     if settings.theme != previous.theme || settings.theme_icon != previous.theme_icon {
@@ -234,14 +313,27 @@ pub fn update_settings<R: Runtime>(
 
 /// Whether Messenger's sounds are on, as the page last said (on until it has).
 pub fn messenger_sounds_on<R: Runtime>(app: &AppHandle<R>) -> bool {
-    app.state::<MessengerPrefsState>().0.lock().unwrap().as_ref().map_or(true, |prefs| prefs.sounds_on)
+    app.state::<MessengerPrefsState>()
+        .0
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map_or(true, |prefs| prefs.sounds_on)
 }
 
 /// Called by inject.js with Messenger's Preferences, which the phone app or
 /// Messenger's own dialog may have changed.
 #[tauri::command]
-pub fn sync_messenger_prefs<R: Runtime>(app: AppHandle<R>, prefs: MessengerPrefs) -> Result<(), String> {
-    let previous = app.state::<MessengerPrefsState>().0.lock().unwrap().replace(prefs.clone());
+pub fn sync_messenger_prefs<R: Runtime>(
+    app: AppHandle<R>,
+    prefs: MessengerPrefs,
+) -> Result<(), String> {
+    let previous = app
+        .state::<MessengerPrefsState>()
+        .0
+        .lock()
+        .unwrap()
+        .replace(prefs.clone());
     if !matches!(previous, Some(previous) if previous.dark_mode == prefs.dark_mode) {
         // fMess's windows (Settings, title bars, menus) look like Messenger.
         app.set_theme(messenger_theme(Some(&prefs.dark_mode)));
@@ -249,7 +341,10 @@ pub fn sync_messenger_prefs<R: Runtime>(app: AppHandle<R>, prefs: MessengerPrefs
     if current(&app).messenger_dark_mode.as_deref() == Some(prefs.dark_mode.as_str()) {
         return Ok(());
     }
-    change(&app, |settings| settings.messenger_dark_mode = Some(prefs.dark_mode)).map(drop)
+    change(&app, |settings| {
+        settings.messenger_dark_mode = Some(prefs.dark_mode)
+    })
+    .map(drop)
 }
 
 /// Called by inject.js when a pane has been dragged to a new width.
@@ -259,6 +354,32 @@ pub fn set_pane_widths<R: Runtime>(app: AppHandle<R>, widths: PaneWidths) -> Res
         return Ok(());
     }
     change(&app, |settings| settings.pane_widths = widths).map(drop)
+}
+
+/// Called by inject.js when local pinned-chat overrides change for an account.
+#[tauri::command]
+pub fn set_pinned_chats<R: Runtime>(
+    app: AppHandle<R>,
+    account: String,
+    chats: AccountPinnedChats,
+) -> Result<(), String> {
+    if !valid_numeric_id(&account) || account == "0" {
+        return Err("invalid account id".into());
+    }
+    let chats = sanitize_pinned_chats(chats);
+    let empty = chats.pinned.is_empty() && chats.hidden.is_empty() && chats.order.is_empty();
+    let existing = current(&app).pinned_chats.get(&account).cloned();
+    if (empty && existing.is_none()) || (!empty && existing.as_ref() == Some(&chats)) {
+        return Ok(());
+    }
+    change(&app, |settings| {
+        if empty {
+            settings.pinned_chats.remove(&account);
+        } else {
+            settings.pinned_chats.insert(account, chats);
+        }
+    })
+    .map(drop)
 }
 
 /// The window theme for Messenger's dark mode setting; None follows the system.
@@ -273,10 +394,18 @@ pub fn messenger_theme(dark_mode: Option<&str>) -> Option<Theme> {
 /// Changes one of Messenger's Preferences from the Settings window: soundsOn,
 /// darkMode or muteFor (milliseconds, -1 until turned off, 0 to turn it off).
 #[tauri::command]
-pub fn set_messenger_pref<R: Runtime>(app: AppHandle<R>, name: String, value: serde_json::Value) -> Result<(), String> {
-    let window = app
-        .get_webview_window(MAIN_WINDOW)
-        .ok_or_else(|| pick(i18n::current(&app), "fMess's window is closed", "Cửa sổ fMess đang đóng"))?;
+pub fn set_messenger_pref<R: Runtime>(
+    app: AppHandle<R>,
+    name: String,
+    value: serde_json::Value,
+) -> Result<(), String> {
+    let window = app.get_webview_window(MAIN_WINDOW).ok_or_else(|| {
+        pick(
+            i18n::current(&app),
+            "fMess's window is closed",
+            "Cửa sổ fMess đang đóng",
+        )
+    })?;
     if let ("darkMode", Some(mode)) = (name.as_str(), value.as_str()) {
         // Recolour fMess's windows together with the page, not after it reports.
         app.set_theme(messenger_theme(Some(mode)));
@@ -294,7 +423,9 @@ pub fn open_messenger_preferences<R: Runtime>(app: AppHandle<R>, section: Option
     crate::show_main_window(&app);
     if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
         let section = serde_json::to_string(&section).expect("JSON serializes");
-        let _ = window.eval(format!("window.__fmessOpenMessengerPreferences?.({section});"));
+        let _ = window.eval(format!(
+            "window.__fmessOpenMessengerPreferences?.({section});"
+        ));
     }
 }
 
@@ -305,11 +436,19 @@ const ZOOM_STEPS: [f64; 11] = [0.5, 0.67, 0.75, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1
 pub fn zoom_by<R: Runtime>(app: &AppHandle<R>, step: i32) {
     let now = current(app).zoom;
     let nearest = (0..ZOOM_STEPS.len())
-        .min_by(|&a, &b| (ZOOM_STEPS[a] - now).abs().total_cmp(&(ZOOM_STEPS[b] - now).abs()))
+        .min_by(|&a, &b| {
+            (ZOOM_STEPS[a] - now)
+                .abs()
+                .total_cmp(&(ZOOM_STEPS[b] - now).abs())
+        })
         .unwrap_or(0);
     let zoom = match step {
         0 => 1.0,
-        _ => ZOOM_STEPS[nearest.saturating_add_signed(step as isize).min(ZOOM_STEPS.len() - 1)],
+        _ => {
+            ZOOM_STEPS[nearest
+                .saturating_add_signed(step as isize)
+                .min(ZOOM_STEPS.len() - 1)]
+        }
     };
     if zoom == now {
         return;
@@ -337,6 +476,7 @@ pub fn page_settings<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> Str
         // The added files of that font (Settings › Font › Add…).
         "fontFaces": crate::fonts::faces_for(app, settings.font()),
         "paneWidths": settings.pane_widths,
+        "pinnedChats": settings.pinned_chats,
         // For the notifications the page writes itself.
         "lang": Lang::from_setting(settings.language.as_deref()),
     })
@@ -345,7 +485,10 @@ pub fn page_settings<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> Str
 
 /// Hands the current settings to the loaded page.
 pub fn page_settings_script<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> String {
-    format!("window.__fmessApplySettings?.({});", page_settings(app, settings))
+    format!(
+        "window.__fmessApplySettings?.({});",
+        page_settings(app, settings)
+    )
 }
 
 /// Goes back to Messenger's own look (the theme was removed).
@@ -381,7 +524,10 @@ fn apply_app_name<R: Runtime>(app: &AppHandle<R>, name: &str) {
 /// saving, so changes made at the same time (by the page and the Settings
 /// window) don't undo each other, and the settings stay as they were when
 /// they can't be saved.
-fn change<R: Runtime>(app: &AppHandle<R>, edit: impl FnOnce(&mut Settings)) -> Result<Settings, String> {
+fn change<R: Runtime>(
+    app: &AppHandle<R>,
+    edit: impl FnOnce(&mut Settings),
+) -> Result<Settings, String> {
     let state = app.state::<SettingsState>();
     let mut settings = state.0.lock().unwrap();
     let mut next = settings.clone();
@@ -405,7 +551,11 @@ fn view<R: Runtime>(app: &AppHandle<R>, settings: Settings) -> SettingsView {
 /// the settings' lock, so `i18n::current` can't be asked here.
 fn save<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> Result<(), String> {
     let lang = Lang::from_setting(settings.language.as_deref());
-    let path = settings_path(app).ok_or(pick(lang, "no config directory", "Không tìm thấy thư mục cài đặt"))?;
+    let path = settings_path(app).ok_or(pick(
+        lang,
+        "no config directory",
+        "Không tìm thấy thư mục cài đặt",
+    ))?;
     let json = serde_json::to_vec_pretty(settings).expect("settings serialize to JSON");
     write_whole(&path, &json).map_err(|err| match lang {
         Lang::En => format!("could not save settings to {}: {err}", path.display()),
@@ -439,7 +589,40 @@ mod tests {
         write_whole(&path, b"{\"zoom\": 1.0}").unwrap();
         write_whole(&path, b"{\"zoom\": 1.25}").unwrap();
         assert_eq!(fs::read_to_string(&path).unwrap(), "{\"zoom\": 1.25}");
-        assert!(!path.with_extension("json.tmp").exists(), "the temporary file is left behind");
+        assert!(
+            !path.with_extension("json.tmp").exists(),
+            "the temporary file is left behind"
+        );
         fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn sanitizes_pinned_chats() {
+        let cleaned = sanitize_pinned_chats(AccountPinnedChats {
+            pinned: vec![
+                "123".into(),
+                "123".into(),
+                "abc".into(),
+                "".into(),
+                "456".into(),
+                "789".into(),
+            ],
+            hidden: vec!["456".into(), "456".into(), "bad!".into()],
+            order: vec!["789".into(), "456".into(), "123".into(), "789".into()],
+        });
+        assert_eq!(cleaned.pinned, vec!["123", "789"]);
+        assert_eq!(cleaned.hidden, vec!["456"]);
+        assert_eq!(cleaned.order, vec!["789", "123"]);
+
+        let many: Vec<String> = (1..=80).map(|n| n.to_string()).collect();
+        let capped = sanitize_pinned_chats(AccountPinnedChats {
+            pinned: many,
+            hidden: vec![],
+            order: vec![],
+        });
+        assert_eq!(capped.pinned.len(), MAX_PINNED_CHATS);
+
+        let parsed: Settings = serde_json::from_str("{\"zoom\": 1.0}").unwrap();
+        assert!(parsed.pinned_chats.is_empty());
     }
 }

@@ -131,6 +131,9 @@
       [/\w+\("isMessengerPWA"\)\(\)&&\w+\("justknobx"\)\._\("1465"\)/, '!0'],
     ],
   };
+  const FACTORY_WRAPPERS = {
+    'MWThreadList.react': (factory) => (typeof wrapPinnedThreadListFactory === 'function' ? wrapPinnedThreadListFactory(factory) : factory),
+  };
   const rewrittenFactories = {};
   const rewriteFactory = (name, factory) => {
     let source = factory.toString();
@@ -163,6 +166,8 @@
           factory = function (...args) {
             return (rewrittenFactories[name] ?? originalFactory).apply(this, args);
           };
+        } else if (typeof factory === 'function' && Object.hasOwn(FACTORY_WRAPPERS, name)) {
+          factory = FACTORY_WRAPPERS[name](factory);
         } else if (typeof factory === 'function' && Object.hasOwn(MODULE_PATCHES, name)) {
           const patch = MODULE_PATCHES[name];
           const originalFactory = factory;
