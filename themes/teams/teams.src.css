@@ -565,7 +565,8 @@ html[data-fmess-media] #fmess-search-box {
 /* Messenger's field (with its back button while searching) takes no room in
    the list and can't be seen, but can take the focus; with it, it covers the
    "Chat" title's row, and the results show under it. */
-html[data-fmess-chats] [data-fmess-list] > div > div > div:has(input[type="search"]) {
+html[data-fmess-chats] [data-fmess-list] > div > div > div:has(input[type="search"]):not(:has([role="grid"], [role="tablist"])),
+html[data-fmess-chats] [data-fmess-list] > div > div > div > div:has(input[type="search"]):not(:has([role="grid"], [role="tablist"])) {
   /* Over the title's row, which comes before it. */
   z-index: 5 !important;
   height: 0 !important;
