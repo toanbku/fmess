@@ -25,6 +25,7 @@ earlier part declares, and the numbers set that order.
 | 14-notifications | Web notifications to the system's, with sender and chat; `say` for fMess's own words |
 | 15-unread-badge | The unread count for the Dock and taskbar |
 | 16-read-ahead | Reading recent chats ahead so they open at once |
+| 17-pinned-chats | Pinned chats at the top of the inbox (server-synced mobile pins merged with local desktop overrides) |
 | 17-theme-hooks | Buttons, search box and quick reactions themes can ask for |
 | 18-notification-reply | Clicks on notifications and replying from them |
 | 19-account | Your picture and the account menu |

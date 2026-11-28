@@ -34,6 +34,7 @@ fn main() {
                 "menu_shortcut",
                 "sync_messenger_prefs",
                 "set_pane_widths",
+                "set_pinned_chats",
                 "set_messenger_pref",
                 "open_messenger_preferences",
                 "test_notification",

@@ -20,6 +20,7 @@
     "allow-menu-shortcut",
     "allow-sync-messenger-prefs",
     "allow-set-pane-widths",
+    "allow-set-pinned-chats",
     "allow-open-settings",
     "notification:allow-is-permission-granted",
     "allow-show-download",
